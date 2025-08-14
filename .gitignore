@@ -1,0 +1,42 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+.pnpm-debug.log
+.DS_Store
+.env
+.env.*
+
+# TypeScript
+*.tsbuildinfo
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# VSCode
+.vscode/
+
+# Logs
+logs
+*.log
+
+# Build output
+dist/
+build/
+coverage/
+
+# Misc
+*.sublime-workspace
+*.sublime-project
+.idea/
+*.swp
+*.swo
