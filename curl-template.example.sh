@@ -5,33 +5,12 @@
 # ===========================================
 
 # 配置區域 - 請修改以下變數
-API_KEY="YOUR_API_KEY_HERE"
-API_URL="https://telegram-news.jlib-cf.workers.dev/api/ingest"
+API_KEY="請換為您的 API 金鑰"
+API_URL="https://您的子網域.workers.dev/api/ingest"
 
 # 基本測試範例
 echo "=== 基本單一新聞推送 ==="
-curl -X POST "$API_URL" \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: $API_KEY" \
-  -d '{
-    "date": "2025-01-15",
-    "results": [
-      {
-        "username": "tech_news",
-        "start": "2025-01-15",
-        "posts": [
-          {
-            "post_date": "2025-01-15",
-            "summary": "AI 技術新突破：GPT-5 正式發布，帶來更強大的語言理解能力",
-            "url": "https://example.com/ai-news-gpt5",
-            "get_date": "2025-01-15"
-          }
-        ]
-      }
-    ]
-  }'
-
-echo -e "\n\n=== 多新聞批次推送 ==="
+echo "=== 多新聞批次推送（單一 API 呼叫） ==="
 curl -X POST "$API_URL" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $API_KEY" \
@@ -78,9 +57,6 @@ curl -X POST "$API_URL" \
     ]
   }'
 
-echo -e "\n\n=== 詳細輸出版本（包含狀態碼和回應標頭）==="
-curl -X POST "$API_URL" \
-  -H "Content-Type: application/json" \
   -H "X-API-Key: $API_KEY" \
   -w "\n\n--- 回應資訊 ---\nHTTP 狀態碼: %{http_code}\n回應時間: %{time_total}s\n" \
   -v \
@@ -116,37 +92,49 @@ curl -s -X POST "$API_URL" \
     "date": "2025-01-15",
     "results": [
       {
-        "username": "quick_test",
-        "posts": [
-          {
-            "post_date": "2025-01-15",
-            "summary": "測試新聞摘要",
-            "url": "https://example.com/test-news",
-            "get_date": "2025-01-15"
-          }
-        ]
+      "username": "tech_updates",
+      "posts": [
+        {
+        "post_date": "2025-01-15",
+        "summary": "新款處理器效能提升30%，耗電量降低50%",
+        "url": "https://example.com/tech-news-$(date +%s)",
+        "get_date": "2025-01-15"
+        },
+        {
+        "post_date": "2025-01-15",
+        "summary": "全球首款可折疊電子紙設備發布，續航達到一週",
+        "url": "https://example.com/foldable-eink-$(date +%N | cut -c1-5)",
+        "get_date": "2025-01-15"
+        }
+      ]
+      },
+      {
+      "username": "finance_news",
+      "posts": [
+        {
+        "post_date": "2025-01-15",
+        "summary": "虛擬貨幣市場波動加劇，分析師預測將有重大調整",
+        "url": "https://example.com/crypto-$(shuf -i 1000-9999 -n 1)",
+        "get_date": "2025-01-15"
+        },
+        {
+        "post_date": "2025-01-15",
+        "summary": "全球供應鏈改善，多個產業庫存壓力減輕",
+        "url": "https://example.com/supply-chain-$RANDOM",
+        "get_date": "2025-01-15"
+        }
+      ]
+      },
+      {
+      "username": "science_daily",
+      "posts": [
+        {
+        "post_date": "2025-01-15",
+        "summary": "科學家發現新型可生物降解材料，有望替代塑膠",
+        "url": "https://example.com/science-discovery-$(date +%s%N | md5sum | head -c 6)",
+        "get_date": "2025-01-15"
+        }
+      ]
       }
     ]
   }' | jq '.'
-
-echo -e "\n\n=== 錯誤測試（無效的 API Key）==="
-curl -X POST "$API_URL" \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: INVALID_KEY" \
-  -w "\nHTTP 狀態碼: %{http_code}\n" \
-  -d '{
-    "date": "2025-01-15",
-    "results": [
-      {
-        "username": "test_user",
-        "posts": [
-          {
-            "post_date": "2025-01-15",
-            "summary": "測試新聞",
-            "url": "https://example.com/test",
-            "get_date": "2025-01-15"
-          }
-        ]
-      }
-    ]
-  }'

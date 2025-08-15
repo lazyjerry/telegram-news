@@ -63,74 +63,89 @@ export class CronHandler {
 				return stats;
 			}
 
-			console.log(`找到 ${unpublishedPosts.length} 則待發布貼文`);
+			console.log(`找到 ${unpublishedPosts.length} 則待發布貼文，將合併為一則訊息發送`);
 
-			// 2. 逐一處理每則貼文
-			for (const post of unpublishedPosts) {
+			// 2. 查詢所有確認且啟用的訂閱者
+			const allActiveSubscriptions = await this.broadcastService.getAllActiveSubscriptions();
+
+			if (allActiveSubscriptions.length === 0) {
+				console.log('沒有有效的訂閱者，跳過推播');
+				stats.executionTime = Date.now() - startTime;
+				return stats;
+			}
+
+			console.log(`將發送給 ${allActiveSubscriptions.length} 個訂閱者`);
+
+			// 3. 按訂閱者分組處理推播
+			for (const subscription of allActiveSubscriptions) {
 				try {
-					// 確保貼文有 ID
-					if (!post.id) {
-						console.warn('跳過沒有 ID 的貼文');
+					// 確保訂閱者有 ID
+					if (!subscription.id) {
+						console.warn('跳過沒有 ID 的訂閱者');
 						continue;
 					}
 
-					stats.processedPosts++;
-					console.log(`\n--- 處理貼文 ${post.id}: ${post.summary?.substring(0, 50)}... ---`);
+					// 根據訂閱者的過濾條件篩選符合的貼文
+					const eligiblePosts = await this.broadcastService.filterPostsForSubscription(unpublishedPosts, subscription);
 
-					// 3. 查詢符合條件的訂閱者
-					const eligibleSubscriptions = await this.broadcastService.getEligibleSubscriptions(post);
-
-					if (eligibleSubscriptions.length === 0) {
-						console.log(`貼文 ${post.id} 沒有符合條件的訂閱者，跳過`);
-						stats.skippedPosts++;
-
-						// 標記為已發布（避免重複處理）
-						await this.broadcastService.markPostAsPublished(post.id);
+					if (eligiblePosts.length === 0) {
+						console.log(`訂閱者 ${subscription.chat_id} 沒有符合條件的貼文，跳過`);
 						continue;
 					}
 
-					console.log(`貼文 ${post.id} 將發送給 ${eligibleSubscriptions.length} 個訂閱者`);
+					console.log(`\n--- 發送給訂閱者 ${subscription.chat_id}: ${eligiblePosts.length} 則新聞 ---`);
 
-					// 4. 發送訊息給每個符合條件的訂閱者
-					for (const subscription of eligibleSubscriptions) {
-						try {
-							// 確保訂閱者有 ID
-							if (!subscription.id) {
-								console.warn('跳過沒有 ID 的訂閱者');
-								continue;
+					stats.totalMessages++;
+
+					// 應用速率限制
+					await this.rateLimiter.waitForSend(subscription.chat_id);
+
+					// 合併多則貼文為一則訊息發送
+					const result = await this.telegramService.sendBatchNewsMessage(subscription.chat_id, eligiblePosts);
+
+					if (result.success) {
+						stats.successfulSends++;
+						console.log(`✅ 成功發送到聊天 ${subscription.chat_id}`);
+
+						// 為每則貼文記錄發送成功
+						for (const post of eligiblePosts) {
+							if (post.id) {
+								await this.telegramService.recordDelivery(post.id, subscription.id, subscription.chat_id, true, undefined);
 							}
+						}
+					} else {
+						stats.failedSends++;
+						console.log(`❌ 發送到聊天 ${subscription.chat_id} 失敗: ${result.error}`);
 
-							stats.totalMessages++;
-
-							// 應用速率限制
-							await this.rateLimiter.waitForSend(subscription.chat_id);
-
-							// 發送訊息
-							const result = await this.telegramService.sendNewsMessage(subscription.chat_id, post);
-
-							// 記錄發送結果
-							await this.telegramService.recordDelivery(post.id, subscription.id, subscription.chat_id, result.success, result.error);
-
-							if (result.success) {
-								stats.successfulSends++;
-								console.log(`✅ 成功發送到聊天 ${subscription.chat_id}`);
-							} else {
-								stats.failedSends++;
-								console.log(`❌ 發送到聊天 ${subscription.chat_id} 失敗: ${result.error}`);
-							}
-						} catch (error) {
-							stats.failedSends++;
-							const errorMsg = error instanceof Error ? error.message : '未知錯誤';
-							console.error(`發送到聊天 ${subscription.chat_id} 時發生異常:`, errorMsg);
-
-							// 記錄失敗 (只有在有 subscription.id 時)
-							if (subscription.id) {
-								await this.telegramService.recordDelivery(post.id, subscription.id, subscription.chat_id, false, errorMsg);
+						// 為每則貼文記錄發送失敗
+						for (const post of eligiblePosts) {
+							if (post.id) {
+								await this.telegramService.recordDelivery(post.id, subscription.id, subscription.chat_id, false, result.error);
 							}
 						}
 					}
+				} catch (error) {
+					stats.failedSends++;
+					const errorMsg = error instanceof Error ? error.message : '未知錯誤';
+					console.error(`發送到聊天 ${subscription.chat_id} 時發生異常:`, errorMsg);
 
-					// 5. 檢查是否所有訂閱者都已發送完成
+					// 為所有相關貼文記錄失敗
+					const eligiblePosts = await this.broadcastService.filterPostsForSubscription(unpublishedPosts, subscription);
+					for (const post of eligiblePosts) {
+						if (post.id && subscription.id) {
+							await this.telegramService.recordDelivery(post.id, subscription.id, subscription.chat_id, false, errorMsg);
+						}
+					}
+				}
+			}
+
+			// 4. 檢查並標記已完成推播的貼文
+			for (const post of unpublishedPosts) {
+				try {
+					if (!post.id) continue;
+
+					stats.processedPosts++;
+
 					const isFullyPublished = await this.broadcastService.isPostFullyPublished(post.id);
 
 					if (isFullyPublished) {
@@ -152,7 +167,7 @@ export class CronHandler {
 				}
 			}
 
-			// 6. 清理速率限制器記憶體
+			// 5. 清理速率限制器記憶體
 			this.rateLimiter.cleanupInactiveLimiters();
 		} catch (error) {
 			console.error('執行推播任務時發生嚴重錯誤:', error);

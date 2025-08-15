@@ -5,7 +5,7 @@
 
 import { Hono } from 'hono';
 import type { Env, HealthResponse } from './types';
-// import { handleIngest } from './handlers/ingest'; // 暫時註解，檔案為空
+import { handleIngest } from './handlers/ingest';
 import { CronHandler } from './handlers/cronHandler';
 import {
 	handleCreateSubscription,
@@ -115,7 +115,76 @@ apiRoutes.use('*', async (c, next) => {
 });
 
 // 新聞資料接收端點
-// apiRoutes.post('/ingest', handleIngest); // 暫時註解，檔案為空
+apiRoutes.post('/ingest', handleIngest); // 暫時註解，檔案為空
+
+// 手動測試推播端點 - POST /api/test
+apiRoutes.post('/test', async (c) => {
+	const startTime = Date.now();
+	console.log('=== 手動觸發推播任務 ===', new Date().toISOString());
+
+	try {
+		// 建立 Cron 處理器
+		const cronHandler = new CronHandler(c.env);
+
+		// 先驗證系統狀態
+		const systemValid = await cronHandler.validateBroadcastSystem();
+		if (!systemValid) {
+			console.error('❌ 推播系統狀態檢查失敗');
+			return c.json(
+				{
+					ok: false,
+					error: '推播系統狀態檢查失敗',
+					message: '系統不在可執行狀態，請檢查配置',
+				},
+				500
+			);
+		}
+
+		// 執行推播任務
+		const stats = await cronHandler.executeBroadcast();
+
+		// 計算執行時間
+		const executionTime = Date.now() - startTime;
+
+		console.log('=== 手動推播任務執行完成 ===');
+		console.log(`總執行時間: ${executionTime}ms`);
+		console.log(`處理貼文數: ${stats.processedPosts}`);
+		console.log(`發送訊息數: ${stats.totalMessages}`);
+		console.log(`成功發送: ${stats.successfulSends}`);
+		console.log(`發送失敗: ${stats.failedSends}`);
+		console.log(`跳過貼文: ${stats.skippedPosts}`);
+
+		// 返回執行結果
+		return c.json({
+			ok: true,
+			message: '推播任務執行完成',
+			execution_time: executionTime,
+			stats: {
+				processed_posts: stats.processedPosts,
+				total_messages: stats.totalMessages,
+				successful_sends: stats.successfulSends,
+				failed_sends: stats.failedSends,
+				skipped_posts: stats.skippedPosts,
+				execution_time: stats.executionTime,
+			},
+			timestamp: new Date().toISOString(),
+		});
+	} catch (error) {
+		const errorMsg = error instanceof Error ? error.message : '未知錯誤';
+		console.error('❌ 手動推播任務執行失敗:', error);
+
+		return c.json(
+			{
+				ok: false,
+				error: '推播任務執行失敗',
+				message: errorMsg,
+				execution_time: Date.now() - startTime,
+				timestamp: new Date().toISOString(),
+			},
+			500
+		);
+	}
+});
 
 // 訂閱管理路由群組
 const subscriptionRoutes = new Hono<{ Bindings: Env }>();

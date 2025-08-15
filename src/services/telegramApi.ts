@@ -339,4 +339,110 @@ export class TelegramApiService {
 			await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
 		}
 	}
+
+	/**
+	 * 批量發送新聞訊息（將多則貼文合併為一則訊息）
+	 * @param chatId 聊天 ID
+	 * @param posts 新聞貼文陣列
+	 * @returns Promise<{ success: boolean; error?: string }> 發送結果
+	 */
+	async sendBatchNewsMessage(chatId: string, posts: Post[]): Promise<{ success: boolean; error?: string }> {
+		try {
+			console.log(`開始批量發送新聞訊息到聊天 ${chatId}，貼文數量: ${posts.length}`);
+
+			if (posts.length === 0) {
+				return { success: false, error: '沒有貼文需要發送' };
+			}
+
+			// 如果只有一則貼文，直接使用原本的方法
+			if (posts.length === 1) {
+				return await this.sendNewsMessage(chatId, posts[0]);
+			}
+
+			// 合併多則貼文為一則訊息
+			const batchMessage = this.formatBatchNewsMessage(posts);
+
+			// 發送 API 請求
+			const response = await this.sendMessage(chatId, batchMessage);
+
+			if (response.ok) {
+				console.log(`批量新聞訊息成功發送到聊天 ${chatId}`);
+				return { success: true };
+			} else {
+				const errorMsg = `發送失敗: ${response.description} (錯誤代碼: ${response.error_code})`;
+				console.error(errorMsg);
+				return { success: false, error: errorMsg };
+			}
+		} catch (error) {
+			const errorMsg = `發送批量新聞訊息時發生異常: ${error instanceof Error ? error.message : '未知錯誤'}`;
+			console.error(errorMsg);
+			return { success: false, error: errorMsg };
+		}
+	}
+
+	/**
+	 * 格式化批量新聞訊息（多則貼文合併為一則訊息）
+	 * @param posts 新聞貼文陣列
+	 * @returns 格式化後的 HTML 訊息
+	 */
+	private formatBatchNewsMessage(posts: Post[]): string {
+		// HTML 跳脫函數
+		const escapeHtml = (text: string): string => {
+			return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+		};
+
+		const currentTime = new Date().toLocaleString('zh-TW', {
+			timeZone: 'Asia/Taipei',
+			year: 'numeric',
+			month: '2-digit',
+			day: '2-digit',
+			hour: '2-digit',
+			minute: '2-digit',
+		});
+
+		// 建立訊息標題
+		let message = `📰 <b>今日新聞推播</b> (${posts.length} 則)\n`;
+		message += `🕐 發送時間：${currentTime}\n\n`;
+
+		// 逐一添加每則新聞
+		posts.forEach((post, index) => {
+			const newsNumber = index + 1;
+
+			// 新聞標題和內容
+			const title = escapeHtml(post.summary?.substring(0, 100) + (post.summary && post.summary.length > 100 ? '...' : '') || '無標題');
+
+			message += `<b>${newsNumber}. ${title}</b>\n`;
+
+			// 新聞來源和發布時間
+			if (post.source_username) {
+				message += `👤 來源：${escapeHtml(post.source_username)}\n`;
+			}
+
+			if (post.post_date) {
+				message += `📅 發布：${post.post_date}\n`;
+			}
+
+			// 新聞連結
+			if (post.url) {
+				message += `🔗 <a href="${escapeHtml(post.url)}">閱讀全文</a>\n`;
+			}
+
+			// 分隔線（除了最後一則）
+			if (index < posts.length - 1) {
+				message += `\n${'─'.repeat(30)}\n\n`;
+			}
+		});
+
+		// 添加結尾
+		message += `\n\n📢 感謝您的訂閱！`;
+
+		// 檢查訊息長度限制（Telegram 限制 4096 字符）
+		if (message.length > 4000) {
+			// 如果太長，截斷並添加省略說明
+			message = message.substring(0, 3900);
+			message += `\n\n⚠️ 訊息過長已截斷，請點擊連結查看完整內容。`;
+		}
+
+		return message;
+	}
 }

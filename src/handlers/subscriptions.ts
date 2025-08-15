@@ -206,42 +206,38 @@ export async function handleCreateSubscription(c: Context<{ Bindings: Env }>): P
 		// 5. 檢查是否已存在訂閱
 		const existingSubscription = await findSubscriptionByChatId(c.env, body.chat_id);
 		const currentTimestamp = getCurrentTimestamp();
-		const confirmToken = generateConfirmToken();
-		const tokenExpireTime = currentTimestamp + 600; // 10 分鐘後過期
 
 		if (existingSubscription) {
-			// 6. 更新現有訂閱記錄
+			// 6. 更新現有訂閱記錄 - 直接啟用確認狀態
 			console.log(`更新現有訂閱記錄，Chat ID: ${body.chat_id}`);
 
 			await c.env.DB.prepare(
 				`
 				UPDATE subscriptions SET
 					enabled = 1,
-					confirmed = 0,
-					confirm_token = ?,
-					confirm_token_expire_ts = ?,
+					confirmed = 1,
+					confirm_token = NULL,
+					confirm_token_expire_ts = NULL,
+					confirmed_at_ts = ?,
 					filters_json = ?,
 					updated_at_ts = ?
 				WHERE chat_id = ?
 				`
 			)
-				.bind(confirmToken, tokenExpireTime, body.filters_json || null, currentTimestamp, body.chat_id)
+				.bind(currentTimestamp, body.filters_json || null, currentTimestamp, body.chat_id)
 				.run();
 
-			console.log(`訂閱記錄更新成功，Chat ID: ${body.chat_id}`);
+			console.log(`訂閱記錄更新成功，Chat ID: ${body.chat_id}，已直接啟用`);
 
 			return c.json({
 				ok: true,
 				subscription_id: existingSubscription.id,
 				chat_id: body.chat_id,
-				status: 'pending',
-				confirm_url: `/subscriptions/confirm?token=${confirmToken}`,
-				confirm_token: confirmToken,
-				expires_at: tokenExpireTime,
-				message: '訂閱記錄已更新，請使用新的確認連結完成訂閱',
+				status: 'confirmed',
+				message: '訂閱已成功更新並啟用！您將開始收到新聞推播',
 			} as CreateSubscriptionResponse);
 		} else {
-			// 7. 建立新訂閱記錄
+			// 7. 建立新訂閱記錄 - 直接啟用確認狀態
 			console.log(`建立新訂閱記錄，Chat ID: ${body.chat_id}`);
 
 			const result = await c.env.DB.prepare(
@@ -249,24 +245,21 @@ export async function handleCreateSubscription(c: Context<{ Bindings: Env }>): P
 				INSERT INTO subscriptions (
 					chat_id, enabled, confirmed, confirm_token, confirm_token_expire_ts,
 					confirmed_at_ts, filters_json, created_at_ts, updated_at_ts
-				) VALUES (?, 1, 0, ?, ?, NULL, ?, ?, ?)
+				) VALUES (?, 1, 1, NULL, NULL, ?, ?, ?, ?)
 				`
 			)
-				.bind(body.chat_id, confirmToken, tokenExpireTime, body.filters_json || null, currentTimestamp, currentTimestamp)
+				.bind(body.chat_id, currentTimestamp, body.filters_json || null, currentTimestamp, currentTimestamp)
 				.run();
 
 			const newSubscriptionId = result.meta.last_row_id as number;
-			console.log(`新訂閱記錄建立成功，ID: ${newSubscriptionId}, Chat ID: ${body.chat_id}`);
+			console.log(`新訂閱記錄建立成功，ID: ${newSubscriptionId}, Chat ID: ${body.chat_id}，已直接啟用`);
 
 			return c.json({
 				ok: true,
 				subscription_id: newSubscriptionId,
 				chat_id: body.chat_id,
-				status: 'pending',
-				confirm_url: `/subscriptions/confirm?token=${confirmToken}`,
-				confirm_token: confirmToken,
-				expires_at: tokenExpireTime,
-				message: '訂閱記錄建立成功，請使用確認連結完成訂閱',
+				status: 'confirmed',
+				message: '訂閱建立成功！您將開始收到新聞推播',
 			} as CreateSubscriptionResponse);
 		}
 	} catch (error) {

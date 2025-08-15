@@ -311,22 +311,27 @@ export class CommandHandler {
 				return;
 			}
 
-			// 建立新訂閱或更新現有訂閱
+			// 建立新訂閱或更新現有訂閱 - 直接確認模式
 			const subscriptionResult = await this.createSubscription(message.chatId.toString());
 
 			if (subscriptionResult.success) {
-				const confirmUrl = `https://${this.getWorkerDomain()}/subscriptions/confirm?token=${subscriptionResult.token}`;
-
+				// 訂閱成功，直接確認
 				const message_text =
-					`🔔 訂閱申請已送出！\n\n` +
-					`⏳ 請點擊下方連結確認訂閱：\n` +
-					`${confirmUrl}\n\n` +
-					`⚠️ 確認連結將在 10 分鐘後過期\n` +
-					`💡 您也可以複製上方連結在瀏覽器中開啟\n\n` +
-					`❓ 需要幫助請輸入 /help`;
+					`🎉 訂閱成功！\n\n` +
+					`✅ 您已成功訂閱新聞推播服務\n` +
+					`📰 將開始為您推送最新新聞資訊\n\n` +
+					`💡 輸入 /status 查看訂閱狀態\n` +
+					`� 輸入 /list 查看未推送文章\n` +
+					`❌ 如需退訂請輸入 /unsubscribe`;
 
 				const keyboard: InlineKeyboardMarkup = {
-					inline_keyboard: [[{ text: '🔗 確認訂閱', url: confirmUrl }], [{ text: '📊 查看狀態', callback_data: 'status' }]],
+					inline_keyboard: [
+						[
+							{ text: '� 查看狀態', callback_data: 'status' },
+							{ text: '� 查看文章', callback_data: 'list' },
+						],
+						[{ text: '❌ 退訂', callback_data: 'unsubscribe' }],
+					],
 				};
 
 				await this.telegramApi.sendInteractiveMessage(message.chatId, message_text, keyboard);
@@ -539,7 +544,6 @@ export class CommandHandler {
 
 			// 添加說明文字
 			listMessage += `💡 <i>這些文章將在下次推播時自動發送</i>\n`;
-			listMessage += `⏰ <i>推播時間：每小時整點執行</i>`;
 
 			// 檢查訊息長度限制
 			if (listMessage.length > 4000) {
@@ -865,7 +869,7 @@ export class CommandHandler {
 	 * @param chatId 聊天 ID
 	 * @returns Promise<{success: boolean, token?: string, error?: string}>
 	 */
-	private async createSubscription(chatId: string): Promise<{ success: boolean; token?: string; error?: string }> {
+	private async createSubscription(chatId: string): Promise<{ success: boolean; error?: string }> {
 		try {
 			// 呼叫內部 API 建立訂閱
 			const response = await fetch(`https://${this.getWorkerDomain()}/subscriptions`, {
@@ -881,7 +885,6 @@ export class CommandHandler {
 				if (data.ok) {
 					return {
 						success: true,
-						token: data.confirm_token,
 					};
 				} else {
 					return {

@@ -10,10 +10,10 @@
 
 - `/start` - 開始使用，查看歡迎訊息和快速操作選單
 - `/help` - 顯示詳細使用說明和指令列表
-- `/subscribe` - 訂閱新聞推播服務
+- `/subscribe` - 訂閱新聞推播服務（直接確認，無需驗證）
 - `/unsubscribe` - 取消新聞推播訂閱
 - `/status` - 查看當前訂閱狀態和統計資訊
-- `/confirm <token>` - 確認訂閱（通過確認連結）
+- `/list` - 查看尚未推送的文章清單
 
 #### 快速關鍵字
 
@@ -45,6 +45,67 @@
 ---
 
 ## 📡 API 文檔
+
+### 🧪 手動測試推播 API
+
+#### 端點資訊
+
+- **URL**: `POST /api/test`
+- **驗證**: 需要 `X-API-Key` 標頭
+- **內容類型**: `application/json`
+- **功能**: 手動觸發推播任務執行
+
+#### 使用範例
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_API_KEY_HERE" \
+  https://telegram-news.jlib-cf.workers.dev/api/test
+```
+
+#### 成功回應 (200)
+
+```json
+{
+	"ok": true,
+	"message": "推播任務執行完成",
+	"execution_time": 1234,
+	"stats": {
+		"processed_posts": 2,
+		"total_messages": 1,
+		"successful_sends": 1,
+		"failed_sends": 0,
+		"skipped_posts": 0,
+		"execution_time": 987
+	},
+	"timestamp": "2025-08-15T14:30:00.000Z"
+}
+```
+
+#### 錯誤回應
+
+**系統狀態檢查失敗 (500)**
+
+```json
+{
+	"ok": false,
+	"error": "推播系統狀態檢查失敗",
+	"message": "系統不在可執行狀態，請檢查配置",
+	"execution_time": 123,
+	"timestamp": "2025-08-15T14:30:00.000Z"
+}
+```
+
+**API 金鑰錯誤 (401)**
+
+```json
+{
+	"ok": false,
+	"error": "未授權的請求",
+	"message": "缺少或無效的 API 金鑰"
+}
+```
 
 ### 🔌 新聞資料接收 API
 
@@ -528,13 +589,156 @@ ingest_news
    - 記錄錯誤訊息供後續分析
    - 實施重試機制處理網路錯誤
 
+---
+
+## 🚀 部署和配置
+
+### 📋 環境變數配置
+
+本系統使用 Cloudflare Workers 秘密變數來安全地管理敏感配置資訊。
+
+#### 🔐 必要的秘密變數
+
+使用以下指令配置 Cloudflare Workers 秘密變數：
+
+```bash
+# API 金鑰 - 用於驗證外部 API 請求
+wrangler secret put API_KEY
+
+# Telegram Bot Token - 從 @BotFather 取得
+wrangler secret put TELEGRAM_BOT_TOKEN
+
+
+# Telegram Webhook 秘密 - 用於驗證 Telegram webhook 請求
+wrangler secret put TELEGRAM_WEBHOOK_SECRET
+```
+
+#### 🎯 秘密變數說明
+
+| 秘密變數                  | 說明                | 取得方式                                                 |
+| ------------------------- | ------------------- | -------------------------------------------------------- |
+| `API_KEY`                 | API 請求驗證金鑰    | 自行生成強密碼（建議 32+ 字元）                          |
+| `TELEGRAM_BOT_TOKEN`      | Telegram 機器人權杖 | 從 [@BotFather](https://t.me/botfather) 建立機器人後取得 |
+| `TELEGRAM_WEBHOOK_SECRET` | Webhook 驗證秘密    | 自行生成隨機字串（建議 16+ 字元）                        |
+
+#### ⚙️ 生成建議
+
+```bash
+# 生成 API_KEY（32 字元隨機字串）
+openssl rand -hex 16
+
+# 生成 TELEGRAM_WEBHOOK_SECRET（24 字元隨機字串）
+openssl rand -base64 18
+```
+
+#### 🛡️ 安全性最佳實踐
+
+1. **永不在程式碼中硬編碼秘密**
+2. **定期輪換秘密變數**
+3. **使用強隨機密碼生成器**
+4. **限制秘密變數存取權限**
+
+#### 📝 部署步驟
+
+1. **配置秘密變數**：
+
+   ```bash
+   wrangler secret put API_KEY
+   wrangler secret put TELEGRAM_BOT_TOKEN
+   wrangler secret put TELEGRAM_WEBHOOK_SECRET
+   ```
+
+2. **部署到 Cloudflare Workers**：
+
+   ```bash
+   npm run deploy
+   ```
+
+3. **設定 Telegram Webhook**：
+
+## 🚀 設定 Telegram Webhook
+
+在設定 webhook 之前，你需要先部署你的 worker 以獲得一個公開可訪問的 URL：
+
+```bash
+# 部署到 Cloudflare Workers
+wrangler deploy
+```
+
+部署成功後，你會獲得一個類似 `https://your-worker.your-subdomain.workers.dev` 的 URL。
+
+首先取得你的 Bot Token 和 Webhook Secret：
+
+```bash
+# 查看已設定的 Bot Token（可選）
+wrangler secret list
+```
+
+然後設定 webhook：
+
+```bash
+# 替換 <YOUR_BOT_TOKEN> 為你的實際 Bot Token
+# 替換 <YOUR_WEBHOOK_SECRET> 為你設定的 webhook 秘密
+# 替換 your-worker.your-subdomain.workers.dev 為你的實際 Worker 網址
+# 注意路徑是 /tg/webhook
+
+curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://your-worker.your-subdomain.workers.dev/tg/webhook",
+    "secret_token": "<YOUR_WEBHOOK_SECRET>"
+  }'
+```
+
+4. **測試機器人功能**：
+
+   設定完成後，在 Telegram 中找到你的機器人並測試：
+
+   ```
+   /start
+   /help
+   /subscribe
+   ```
+
+### 🗄️ 資料庫設定
+
+使用 Cloudflare D1 資料庫：
+
+```bash
+# 建立資料庫
+wrangler d1 create telegram_news_db
+
+# 執行資料庫遷移
+wrangler d1 migrations apply telegram_news_db --local
+wrangler d1 migrations apply telegram_news_db --remote
+```
+
+### 🛠️ 本地開發
+
+```bash
+# 安裝依賴
+npm install
+
+# 本地開發伺服器
+npm run dev
+
+# 執行測試
+npm test
+```
+
+---
+
+## 🔑 API 金鑰管理
+
 ### 環境變數配置範例
 
 ```bash
-# .env 檔案
+# .env 檔案（僅用於本地測試）
 TELEGRAM_NEWS_API_KEY=your_actual_api_key_here
 TELEGRAM_NEWS_API_URL=https://telegram-news.jlib-cf.workers.dev/api/ingest
 ```
+
+⚠️ **重要提醒**：生產環境請務必使用 Cloudflare Workers 秘密變數，不要使用 `.env` 檔案。
 
 ### 錯誤處理最佳實踐
 

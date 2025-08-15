@@ -217,4 +217,69 @@ export class BroadcastService {
 			console.error(`更新貼文 ${postId} 嘗試次數時發生錯誤:`, error);
 		}
 	}
+
+	/**
+	 * 查詢所有有效的訂閱者（已確認且啟用）
+	 * @returns Promise<Subscription[]> 有效訂閱者陣列
+	 */
+	async getAllActiveSubscriptions(): Promise<Subscription[]> {
+		try {
+			console.log('查詢所有有效訂閱者...');
+
+			const query = `
+				SELECT 
+					id, chat_id, enabled, confirmed, confirm_token, confirm_token_expire_ts,
+					confirmed_at_ts, filters_json, created_at_ts, updated_at_ts
+				FROM subscriptions 
+				WHERE enabled = 1 AND confirmed = 1
+				ORDER BY created_at_ts ASC
+			`;
+
+			const result = await this.env.DB.prepare(query).all();
+			const subscriptions = result.results as unknown as Subscription[];
+
+			console.log(`找到 ${subscriptions.length} 個有效訂閱者`);
+			return subscriptions;
+		} catch (error) {
+			console.error('查詢有效訂閱者時發生錯誤:', error);
+			throw new Error(`查詢有效訂閱者失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+		}
+	}
+
+	/**
+	 * 根據訂閱者的過濾條件篩選符合的貼文
+	 * @param posts 所有待處理的貼文
+	 * @param subscription 訂閱者資訊
+	 * @returns Promise<Post[]> 符合條件的貼文陣列
+	 */
+	async filterPostsForSubscription(posts: Post[], subscription: Subscription): Promise<Post[]> {
+		try {
+			// 解析訂閱者的過濾條件
+			let filters: any = null;
+			if (subscription.filters_json) {
+				try {
+					filters = JSON.parse(subscription.filters_json);
+				} catch (error) {
+					console.warn(`訂閱者 ${subscription.chat_id} 的過濾條件格式錯誤，忽略過濾`);
+				}
+			}
+
+			// 如果沒有過濾條件，返回所有貼文
+			if (!filters || !filters.usernames || !Array.isArray(filters.usernames)) {
+				return posts;
+			}
+
+			// 根據 source_username 過濾貼文
+			const filteredPosts = posts.filter((post) => {
+				return filters.usernames.includes(post.source_username);
+			});
+
+			console.log(`訂閱者 ${subscription.chat_id} 過濾後符合條件的貼文: ${filteredPosts.length}/${posts.length}`);
+			return filteredPosts;
+		} catch (error) {
+			console.error(`篩選訂閱者 ${subscription.chat_id} 的貼文時發生錯誤:`, error);
+			// 發生錯誤時返回所有貼文，確保不會遺漏
+			return posts;
+		}
+	}
 }
