@@ -7,6 +7,12 @@ import { Hono } from 'hono';
 import type { Env, HealthResponse } from './types';
 import { handleIngest } from './handlers/ingest';
 import { CronHandler } from './handlers/cronHandler';
+import {
+	handleCreateSubscription,
+	handleGetSubscriptionStatus,
+	handleDeleteSubscription,
+	handleConfirmSubscription,
+} from './handlers/subscriptions';
 
 // 建立 Hono 應用實例，並設定環境型別
 const app = new Hono<{ Bindings: Env }>();
@@ -112,26 +118,17 @@ apiRoutes.post('/ingest', handleIngest);
 // 訂閱管理路由群組
 const subscriptionRoutes = new Hono<{ Bindings: Env }>();
 
-subscriptionRoutes.get('/:chat_id/status', async (c) => {
-	return c.json({
-		ok: true,
-		message: '訂閱狀態查詢 - 開發中',
-	});
-});
+// 訂閱確認端點 - GET /subscriptions/confirm?token=xxx
+subscriptionRoutes.get('/confirm', handleConfirmSubscription);
 
-subscriptionRoutes.post('/', async (c) => {
-	return c.json({
-		ok: true,
-		message: '建立訂閱 - 開發中',
-	});
-});
+// 訂閱狀態查詢端點 - GET /subscriptions/:chat_id/status
+subscriptionRoutes.get('/:chat_id/status', handleGetSubscriptionStatus);
 
-subscriptionRoutes.delete('/:chat_id', async (c) => {
-	return c.json({
-		ok: true,
-		message: '取消訂閱 - 開發中',
-	});
-});
+// 建立訂閱端點 - POST /subscriptions
+subscriptionRoutes.post('/', handleCreateSubscription);
+
+// 取消訂閱端點 - DELETE /subscriptions/:chat_id
+subscriptionRoutes.delete('/:chat_id', handleDeleteSubscription);
 
 // Telegram Webhook 路由群組
 const telegramRoutes = new Hono<{ Bindings: Env }>();

@@ -32,6 +32,50 @@
 ---
 ```
 
+## 第五階段：訂閱管理系統 (Stage 5) - 完成日期：2024-12-27
+
+### 新增檔案
+
+- `src/handlers/subscriptions.ts` - 訂閱管理 API 處理程式
+  - 實作完整 CRUD 操作
+  - 包含輸入驗證、UPSERT 邏輯、Token 確認系統
+  - 支援軟刪除和狀態管理
+
+### 修改檔案
+
+- `src/index.ts` - 新增訂閱管理路由
+  - POST /subscriptions - 建立/更新訂閱
+  - GET /subscriptions/:chat_id/status - 查詢訂閱狀態
+  - DELETE /subscriptions/:chat_id - 軟刪除訂閱
+  - GET /subscriptions/confirm - Token 確認
+
+### 主要功能
+
+- **訂閱建立與更新**：支援 UPSERT 邏輯，避免重複訂閱
+- **狀態查詢系統**：完整訂閱狀態查詢，包含時間戳與確認狀態
+- **軟刪除機制**：保留歷史記錄，支援重複退訂處理
+- **Token 確認系統**：安全的訂閱確認流程
+- **完整錯誤處理**：輸入驗證、數據庫錯誤、業務邏輯錯誤
+
+### 測試驗證
+
+- ✅ 訂閱建立 API 測試（UPSERT 邏輯驗證）
+- ✅ Token 確認流程測試
+- ✅ 狀態查詢 API 測試
+- ✅ 軟刪除功能測試
+- ✅ 錯誤情境處理測試（無效輸入、重複操作）
+- ✅ 生產環境部署與 API 端點驗證
+
+### 技術規格
+
+- 使用 D1 數據庫 subscriptions 表格
+- UUID Token 生成確保安全性
+- RESTful API 設計符合標準
+- 完整 TypeScript 型別定義
+- 繁體中文註解與錯誤訊息
+
+---
+
 ## 📚 開發階段記錄
 
 ## 2025-01-14
