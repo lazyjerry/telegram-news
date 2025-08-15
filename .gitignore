@@ -167,3 +167,5 @@ dist
 .wrangler/
 
 curl-template.sh
+
+__pycache__/*

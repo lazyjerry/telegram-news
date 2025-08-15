@@ -4,6 +4,8 @@
 
 ## 🤖 機器人功能
 
+### 📱 畫面截圖
+
 ### 📱 私人聊天功能
 
 #### 基本指令
@@ -26,6 +28,8 @@
 ### 🏢 群組功能
 
 #### 一般成員指令
+
+@this_news_bot 是該機器人名字，請換成自己的
 
 - `/start@this_news_bot` - 查看群組歡迎訊息
 - `/help@this_news_bot` - 顯示群組使用指南
@@ -61,7 +65,7 @@
 curl -X POST \
   -H "Content-Type: application/json" \
   -H "X-API-Key: YOUR_API_KEY_HERE" \
-  https://telegram-news.jlib-cf.workers.dev/api/test
+  https://你的子域名.workers.dev/api/test
 ```
 
 #### 成功回應 (200)
@@ -193,7 +197,7 @@ curl -X POST \
 ### cURL
 
 ```bash
-curl -X POST https://telegram-news.jlib-cf.workers.dev/api/ingest \
+curl -X POST https://你的子域名.workers.dev/api/ingest \
   -H "Content-Type: application/json" \
   -H "X-API-Key: YOUR_API_KEY_HERE" \
   -d '{
@@ -246,7 +250,7 @@ async function ingestNews() {
 	};
 
 	try {
-		const response = await fetch('https://telegram-news.jlib-cf.workers.dev/api/ingest', {
+		const response = await fetch('https://你的子域名.workers.dev/api/ingest', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -282,7 +286,7 @@ import json
 from datetime import datetime
 
 def ingest_news():
-    url = 'https://telegram-news.jlib-cf.workers.dev/api/ingest'
+    url = 'https://你的子域名.workers.dev/api/ingest'
 
     headers = {
         'Content-Type': 'application/json',
@@ -340,7 +344,7 @@ if __name__ == '__main__':
 ```php
 <?php
 function ingestNews() {
-    $url = 'https://telegram-news.jlib-cf.workers.dev/api/ingest';
+    $url = 'https://你的子域名.workers.dev/api/ingest';
 
     $headers = [
         'Content-Type: application/json',
@@ -437,7 +441,7 @@ type IngestResponse struct {
 }
 
 func ingestNews() error {
-    url := "https://telegram-news.jlib-cf.workers.dev/api/ingest"
+    url := "https://你的子域名.workers.dev/api/ingest"
 
     newsData := IngestRequest{
         Date: "2025-01-15",
@@ -517,7 +521,7 @@ require 'json'
 require 'uri'
 
 def ingest_news
-  url = URI('https://telegram-news.jlib-cf.workers.dev/api/ingest')
+  url = URI('https://你的子域名.workers.dev/api/ingest')
 
   news_data = {
     date: '2025-01-15',
@@ -735,7 +739,7 @@ npm test
 ```bash
 # .env 檔案（僅用於本地測試）
 TELEGRAM_NEWS_API_KEY=your_actual_api_key_here
-TELEGRAM_NEWS_API_URL=https://telegram-news.jlib-cf.workers.dev/api/ingest
+TELEGRAM_NEWS_API_URL=https://你的子域名.workers.dev/api/ingest
 ```
 
 ⚠️ **重要提醒**：生產環境請務必使用 Cloudflare Workers 秘密變數，不要使用 `.env` 檔案。
@@ -888,6 +892,7 @@ else:
 
 ### 群組 Help 功能
 
+@this_news_bot 是該機器人名字，請換成自己的
 在群組中使用 `/help@this_news_bot` 時，機器人會根據用戶權限顯示：
 
 #### 一般成員看到的內容：
@@ -937,11 +942,47 @@ Help 指令的技術特點：
 
 ## 🔗 相關連結
 
-- 🤖 **Telegram Bot**: [@this_news_bot](https://t.me/this_news_bot)
 - 📖 **詳細規格**: [.spec/spec.md](.spec/spec.md)
 - 📋 **開發任務**: [.spec/task.md](.spec/task.md)
 - 📝 **變更記錄**: [.spec/changelog.md](.spec/changelog.md)
+- 🧪 **API 測試案例**: [.spec/api-test.http](.spec/api-test.http)
+- 🗂️ **API 文件草稿**: [.spec/api-doc.md](.spec/api-doc.md)
+- 🧩 **資料結構設計**: [.spec/schema.md](.spec/schema.md)
+- 🛡️ **安全性設計**: [.spec/security.md](.spec/security.md)
 
 ---
 
-_這個 Help 系統提供完整的用戶指引，讓用戶能夠快速了解並有效使用所有功能。_
+---
+
+## 🖼️ 系統截圖展示
+
+以下為本系統主要功能操作畫面截圖：
+
+<div align="center">
+
+<img src="imgs/sc01.png" alt="機器人啟動與歡迎畫面" width="400" />
+<br><sub>機器人啟動與歡迎訊息</sub>
+
+<img src="imgs/sc02.png" alt="訂閱新聞推播操作" width="400" />
+<br><sub>訂閱新聞推播操作流程</sub>
+
+<img src="imgs/sc03.png" alt="API 測試與推播結果" width="400" />
+<br><sub>API 測試與推播結果展示</sub>
+
+</div>
+
+---
+
+## 🗂️ 根目錄 sh/py 工具腳本說明
+
+| 檔案名稱                   | 類型 | 說明                                                                                                                              |
+| -------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `curl-template.sh`         | sh   | API 批次推播測試腳本，直接呼叫 /api/ingest，需設定 API_KEY 與 API_URL，支援多新聞批次推送。 \* 請從 curl-template.example.sh 建立 |
+| `curl-template.example.sh` | sh   | API 測試腳本範本，僅供參考，需自行填入 API_KEY 與 API_URL。                                                                       |
+| `curl_api_test.sh`         | sh   | /api/test 端點的 cURL 模擬指令腳本，展示 API_KEY 標頭用法與預期回應格式。依照說明手動觸發排程。                                   |
+| `debug_subscription.js`    | js   | 訂閱確認流程的調試腳本，模擬訂閱建立與確認，便於本地除錯。                                                                        |
+| `test_list_command.js`     | js   | 模擬 Telegram webhook /list 指令測試腳本，驗證 webhook 處理流程。                                                                 |
+| `git.py`                   | py   | Git 自動化工具，支援一鍵 add/commit/push，互動式輸入 commit message，適合快速同步專案。                                           |
+| `truncate_tables.py`       | py   | D1 資料庫資料表清空工具，互動式選單，可選擇性清空推播記錄、統計等表，適合開發測試重置。                                           |
+
+> 這些腳本主要用於本地開發、測試與維運自動化，請依需求調整參數與權限，避免在生產環境誤用。
