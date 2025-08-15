@@ -5,7 +5,7 @@
 
 import { Hono } from 'hono';
 import type { Env, HealthResponse } from './types';
-import { handleIngest } from './handlers/ingest';
+// import { handleIngest } from './handlers/ingest'; // 暫時註解，檔案為空
 import { CronHandler } from './handlers/cronHandler';
 import {
 	handleCreateSubscription,
@@ -115,7 +115,7 @@ apiRoutes.use('*', async (c, next) => {
 });
 
 // 新聞資料接收端點
-apiRoutes.post('/ingest', handleIngest);
+// apiRoutes.post('/ingest', handleIngest); // 暫時註解，檔案為空
 
 // 訂閱管理路由群組
 const subscriptionRoutes = new Hono<{ Bindings: Env }>();

@@ -36,6 +36,29 @@
 - **POST /tg/webhook**：接收 Telegram 更新，處理訂閱互動
 - **GET /health**：健康檢查
 
+### Telegram 指令處理
+
+#### 基本指令
+
+- **/start**：顯示歡迎訊息與使用說明
+- **/subscribe**：開始訂閱流程，生成確認 token
+- **/unsubscribe**：取消訂閱
+- **/status**：查詢目前訂閱狀態
+- **/list**：列出尚未推送的文章清單（包含標題、內容摘要、網址）
+
+#### 訂閱確認流程
+
+- 用戶輸入 `/subscribe` 後系統生成確認連結
+- 確認 token 有效期 10 分鐘
+- 點擊確認後將 `confirmed=1, enabled=1`
+- **BUG 修復需求**：修復確認 token 驗證邏輯，解決「找不到對應的訂閱記錄」錯誤
+
+#### 推播訊息格式
+
+- **整合推播需求**：將新聞內容整合成一則完整訊息推送
+- 訊息格式包含：標題、內容摘要、發布時間、來源連結
+- 支援 Markdown 格式化，提升閱讀體驗
+
 ### 安全機制
 
 - Header 驗證：`X-API-Key` 用於管理端點，`X-Telegram-Bot-Api-Secret-Token` 用於 webhook

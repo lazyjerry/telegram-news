@@ -181,9 +181,10 @@ export class TelegramApiService {
 	}
 
 	/**
-	 * 格式化新聞訊息為 HTML 格式
+	 * 格式化新聞訊息為整合的 HTML 格式
+	 * 根據任務 19.1 需求：整合推播訊息內容，提升用戶閱讀體驗
 	 * @param post 新聞貼文資料
-	 * @returns 格式化後的 HTML 訊息
+	 * @returns 格式化後的整合 HTML 訊息
 	 */
 	private formatNewsMessage(post: Post): string {
 		// HTML 特殊字符轉義
@@ -191,34 +192,80 @@ export class TelegramApiService {
 			return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 		};
 
-		// 建立訊息範本
+		// 格式化時間戳記為可讀格式
+		const formatTimestamp = (timestamp?: number): string => {
+			if (!timestamp) return '';
+			const date = new Date(timestamp * 1000);
+			return date.toLocaleString('zh-TW', {
+				timeZone: 'Asia/Taipei',
+				year: 'numeric',
+				month: '2-digit',
+				day: '2-digit',
+				hour: '2-digit',
+				minute: '2-digit',
+			});
+		};
+
+		// 建立整合的訊息內容
 		let message = '';
 
-		// 標題部分（使用粗體）
+		// 📰 新聞標題 (粗體，突出顯示)
 		if (post.summary) {
 			const escapedSummary = escapeHtml(post.summary);
-			message += `<b>${escapedSummary}</b>\n\n`;
+			message += `📰 <b>${escapedSummary}</b>\n`;
+			message += `${'─'.repeat(30)}\n\n`; // 分隔線提升視覺效果
 		}
 
-		// 來源資訊
-		if (post.source_username) {
-			message += `📰 來源：${escapeHtml(post.source_username)}\n`;
+		// 📄 內容摘要 (如果標題和摘要不同，顯示詳細內容)
+		if (post.summary && post.summary.length < 200) {
+			// 如果標題較短，可能需要更多內容說明
+			message += `📄 <i>詳細內容請點選下方連結查看</i>\n\n`;
 		}
 
-		// 日期資訊
+		// 📅 發布資訊
+		message += `📅 <b>發布時間</b>\n`;
 		if (post.post_date) {
-			message += `📅 日期：${post.post_date}\n`;
+			message += `   • 發布日期：${post.post_date}\n`;
+		}
+		if (post.post_date_ts) {
+			message += `   • 發布時間：${formatTimestamp(post.post_date_ts)}\n`;
+		}
+		message += '\n';
+
+		// 📰 來源資訊
+		if (post.source_username) {
+			message += `� <b>新聞來源</b>\n`;
+			message += `   • ${escapeHtml(post.source_username)}\n\n`;
 		}
 
-		// 連結部分
+		// 🔗 閱讀連結 (突出顯示)
 		if (post.url) {
-			message += `\n🔗 <a href="${post.url}">閱讀完整內容</a>`;
+			message += `🔗 <b><a href="${post.url}">▶ 點此閱讀完整新聞內容</a></b>\n\n`;
 		}
+
+		// 📊 系統資訊 (較小字體)
+		message += `<i>📊 系統資訊</i>\n`;
+		if (post.get_date) {
+			message += `<i>   • 資料擷取：${post.get_date}</i>\n`;
+		}
+		if (post.get_date_ts) {
+			message += `<i>   • 處理時間：${formatTimestamp(post.get_date_ts)}</i>\n`;
+		}
+
+		// 💡 服務標識
+		message += `\n<i>💡 由 Telegram 新聞推播系統提供</i>`;
 
 		// 檢查訊息長度，Telegram 限制為 4096 字元
 		if (message.length > 4090) {
-			// 截斷並添加省略號
-			message = message.substring(0, 4087) + '...';
+			// 如果超出長度限制，優雅地截斷
+			const truncatePoint = message.lastIndexOf('\n', 4000); // 在換行處截斷
+			if (truncatePoint > 0) {
+				message = message.substring(0, truncatePoint);
+				message += '\n\n<i>📝 內容已截斷，請點選連結查看完整內容</i>';
+			} else {
+				// 強制截斷
+				message = message.substring(0, 4087) + '...';
+			}
 		}
 
 		return message;

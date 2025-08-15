@@ -85,6 +85,10 @@ export class CommandHandler {
 					await this.handleStatusCommand(message);
 					break;
 
+				case 'list':
+					await this.handleListCommand(message);
+					break;
+
 				case 'help':
 					await this.handleHelpCommand(message);
 					break;
@@ -469,6 +473,101 @@ export class CommandHandler {
 	}
 
 	/**
+	 * 處理 /list 指令 - 列出尚未推送的文章
+	 * 根據任務 20.1 需求：提供尚未推送的 post 清單功能
+	 * @param message 解析後的訊息物件
+	 * @returns Promise<void>
+	 */
+	private async handleListCommand(message: ParsedMessage): Promise<void> {
+		console.log(`處理 /list 指令，聊天 ID: ${message.chatId}`);
+
+		try {
+			// 1. 檢查用戶是否有訂閱權限
+			const subscriptionStatus = await this.getDetailedSubscriptionStatus(message.chatId.toString());
+
+			if (!subscriptionStatus.subscribed || !subscriptionStatus.confirmed) {
+				const errorMessage =
+					`❌ 無法查看文章清單\n\n` +
+					`🔐 此功能僅限已訂閱用戶使用\n\n` +
+					`💡 請先完成訂閱流程：\n` +
+					`1. 輸入 /subscribe 開始訂閱\n` +
+					`2. 點擊確認連結完成訂閱`;
+
+				const keyboard: InlineKeyboardMarkup = {
+					inline_keyboard: [[{ text: '🔔 立即訂閱', callback_data: 'subscribe' }]],
+				};
+
+				await this.telegramApi.sendInteractiveMessage(message.chatId.toString(), errorMessage, keyboard);
+				return;
+			}
+
+			// 2. 查詢未推送的文章 (published=0) - 使用現有的廣播服務
+			const unpublishedPosts = await this.queryUnpublishedPosts(10); // 限制 10 篇，避免訊息過長
+
+			if (unpublishedPosts.length === 0) {
+				const emptyMessage =
+					`📋 尚未推送的文章清單\n\n` + `🎉 目前沒有待推送的文章\n\n` + `✅ 所有新聞都已推送完成\n` + `📱 新文章發布後會立即推送通知`;
+
+				await this.telegramApi.sendMessage(message.chatId.toString(), emptyMessage);
+				return;
+			}
+
+			// 3. 格式化文章清單
+			let listMessage = `📋 尚未推送的文章清單\n`;
+			listMessage += `${'═'.repeat(25)}\n\n`;
+
+			unpublishedPosts.forEach((post: any, index: number) => {
+				listMessage += `${index + 1}. 📰 <b>${this.htmlEscape(post.summary || '無標題')}</b>\n`;
+
+				// 發布日期
+				if (post.post_date) {
+					listMessage += `   📅 發布：${post.post_date}\n`;
+				}
+
+				// 來源
+				if (post.source_username) {
+					listMessage += `   👤 來源：${this.htmlEscape(post.source_username)}\n`;
+				}
+
+				// 連結
+				if (post.url) {
+					listMessage += `   🔗 <a href="${post.url}">查看完整內容</a>\n`;
+				}
+
+				listMessage += '\n';
+			});
+
+			// 添加說明文字
+			listMessage += `💡 <i>這些文章將在下次推播時自動發送</i>\n`;
+			listMessage += `⏰ <i>推播時間：每小時整點執行</i>`;
+
+			// 檢查訊息長度限制
+			if (listMessage.length > 4000) {
+				// 如果過長，提供摘要版本
+				listMessage = `📋 尚未推送的文章清單 (${unpublishedPosts.length} 篇)\n\n`;
+
+				unpublishedPosts.slice(0, 5).forEach((post: any, index: number) => {
+					listMessage += `${index + 1}. ${this.htmlEscape(post.summary || '無標題')}\n`;
+					if (post.url) {
+						listMessage += `   🔗 <a href="${post.url}">閱讀</a>\n`;
+					}
+				});
+
+				if (unpublishedPosts.length > 5) {
+					listMessage += `\n... 還有 ${unpublishedPosts.length - 5} 篇文章\n`;
+				}
+
+				listMessage += `\n💡 <i>完整清單將在推播時發送</i>`;
+			}
+
+			await this.telegramApi.sendMessage(message.chatId.toString(), listMessage);
+		} catch (error) {
+			console.error('處理 /list 指令失敗:', error);
+			await this.sendErrorMessage(message.chatId, '無法查詢文章清單，請稍後再試。');
+		}
+	}
+
+	/**
 	 * 處理 /help 指令
 	 * @param message 解析後的訊息物件
 	 * @returns Promise<void>
@@ -499,12 +598,14 @@ export class CommandHandler {
 			`/subscribe - 訂閱新聞推播服務\n` +
 			`/unsubscribe - 取消新聞推播訂閱\n` +
 			`/status - 查看您的訂閱狀態\n` +
+			`/list - 查看尚未推送的文章清單\n` +
 			`/help - 顯示此使用說明\n\n` +
 			`🔤 快速關鍵字：\n` +
 			`您也可以直接發送以下關鍵字：\n` +
 			`• 「訂閱」或「subscribe」- 快速訂閱\n` +
 			`• 「退訂」或「unsubscribe」- 快速退訂\n` +
-			`• 「狀態」或「status」- 查看狀態\n\n` +
+			`• 「狀態」或「status」- 查看狀態\n` +
+			`• 「清單」或「list」- 查看文章清單\n\n` +
 			`⚠️ 重要提醒：\n` +
 			`• 訂閱後需點擊確認連結才會正式生效\n` +
 			`• 確認連結將在 10 分鐘後自動過期\n` +
@@ -512,6 +613,7 @@ export class CommandHandler {
 			`• 推播時間為每小時整點（如有新聞）\n\n` +
 			`💡 使用技巧：\n` +
 			`• 建議先使用 /status 檢查訂閱狀態\n` +
+			`• 使用 /list 查看即將推送的文章\n` +
 			`• 如遇問題，請重新執行相關指令\n` +
 			`• 確認郵件可能會在垃圾郵件資料夾中`;
 
@@ -1197,5 +1299,40 @@ export class CommandHandler {
 		} catch (error) {
 			console.error('編輯訊息失敗:', error);
 		}
+	}
+
+	/**
+	 * 查詢未推送的文章
+	 * @param limit 查詢數量限制
+	 * @returns Promise<any[]> 未推送文章列表
+	 */
+	private async queryUnpublishedPosts(limit: number = 10): Promise<any[]> {
+		try {
+			const currentTimestamp = Math.floor(Date.now() / 1000);
+
+			const query = `
+				SELECT id, source_username, summary, url, post_date, post_date_ts, created_at_ts
+				FROM posts 
+				WHERE published = 0 
+					AND (post_date_ts IS NULL OR post_date_ts <= ?)
+				ORDER BY post_date_ts ASC, created_at_ts ASC
+				LIMIT ?
+			`;
+
+			const result = await this.env.DB.prepare(query).bind(currentTimestamp, limit).all();
+			return (result.results as any[]) || [];
+		} catch (error) {
+			console.error('查詢未推送文章失敗:', error);
+			return [];
+		}
+	}
+
+	/**
+	 * HTML 字符轉義
+	 * @param text 要轉義的文字
+	 * @returns 轉義後的文字
+	 */
+	private htmlEscape(text: string): string {
+		return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 	}
 }
