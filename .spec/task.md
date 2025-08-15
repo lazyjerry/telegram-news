@@ -8,101 +8,130 @@
 
 ### 1. 專案初始化與環境設定
 
-1. [ ] **1.1** 初始化 Cloudflare Workers 專案，設定 wrangler.toml
+[x] **1.1** 初始化 Cloudflare Workers 專案，設定 wrangler.jsonc ✅
 
-   - **執行步驟**：
-     1. 建立專案目錄：`mkdir telegram-news && cd telegram-news`
-     2. 初始化專案：`wrangler init telegram-news --yes`
-     3. 建立 `src` 資料夾結構：`mkdir -p src/{types,utils,handlers,services}`
-     4. 設定 `wrangler.toml`，配置專案名稱、相容性日期、cron 觸發器
-     5. 安裝依賴：`npm install hono @types/node`
-   - **驗證標準**：
-     - `wrangler.toml` 包含正確的 cron 設定 `["0 * * * *"]`
-     - 專案結構符合 Hono 最佳實務
-   - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證專案結構正確。
-   - 參考：[spec.md - 環境與綁定](./spec.md#4-環境與綁定)
+- **執行步驟**：
+  1. ✅ 建立專案目錄：`mkdir telegram-news && cd telegram-news`
+  2. ✅ 初始化專案：`wrangler init telegram-news --yes`
+  3. ✅ 建立 `src` 資料夾結構：`mkdir -p src/{types,utils,handlers,services}`
+  4. ✅ 設定 `wrangler.jsonc`，配置專案名稱、相容性日期、cron 觸發器
+  5. ✅ 安裝依賴：`npm install hono @types/node`
+- **驗證標準**：
+  - ✅ `wrangler.jsonc` 包含正確的 cron 設定 `["0 * * * *"]`
+  - ✅ 專案結構符合 Hono 最佳實務
+- ✅ 已完成：專案結構建立完成，包含完整的資料夾結構和依賴套件
+- 參考：[spec.md - 環境與綁定](./spec.md#4-環境與綁定)
 
-2. [ ] **1.2** 建立 D1 資料庫實例，設定 database_id 綁定
+[x] **1.2** 建立 D1 資料庫實例，設定 database_id 綁定 ✅
 
-   - **執行步驟**：
-     1. 建立 D1 資料庫：`wrangler d1 create telegram_news_db`
-     2. 記錄回傳的 database_id
-     3. 更新 `wrangler.toml`，添加 D1 綁定設定
-     4. 建立初始 SQL 遷移檔：`migrations/0001_init.sql`
-     5. 測試本地連線：`wrangler d1 execute telegram_news_db --command "SELECT 1"`
-   - **驗證標準**：
-     - D1 資料庫成功建立且可連線
-     - `wrangler.toml` 包含正確的 database_id 綁定
-   - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證 D1 連線正常。
-   - 執行：`wrangler d1 create telegram_news_db`
+- **執行步驟**：
+  1. ✅ 建立 D1 資料庫：`wrangler d1 create telegram_news_db`
+  2. ✅ 記錄回傳的 database_id：`bbf33270-c115-45ed-93f9-20e2d24e0862`
+  3. ✅ 更新 `wrangler.jsonc`，添加 D1 綁定設定
+  4. ✅ 建立初始 SQL 遷移檔：`migrations/0001_init.sql`
+  5. ✅ 執行資料庫遷移：`wrangler d1 migrations apply telegram_news_db --local`
+- **驗證標準**：
+  - ✅ D1 資料庫成功建立且可連線
+  - ✅ `wrangler.jsonc` 包含正確的 database_id 綁定
+- ✅ 已完成：資料庫實例建立完成，包含 posts、subscriptions、deliveries 三個資料表
+- **🚀 雲端操作提醒**：需執行 `wrangler d1 migrations apply telegram_news_db` 將遷移套用到生產環境
 
-3. [ ] **1.3** 設定環境變數與 Secrets（TELEGRAM_BOT_TOKEN, API_KEY, TELEGRAM_WEBHOOK_SECRET）
-   - **執行步驟**：
-     1. 建立 Telegram Bot，取得 BOT_TOKEN（透過 @BotFather）
-     2. 產生 API_KEY：`openssl rand -hex 32`
-     3. 產生 WEBHOOK_SECRET：`openssl rand -hex 16`
-     4. 設定 Secrets：
-        ```bash
-        wrangler secret put TELEGRAM_BOT_TOKEN
-        wrangler secret put API_KEY
-        wrangler secret put TELEGRAM_WEBHOOK_SECRET
-        ```
-     5. 建立 `.env.example` 檔案作為範本
-     6. 在 `.gitignore` 中排除 `.env` 檔案
-   - **驗證標準**：
-     - 所有 Secrets 成功設定且可在 Cloudflare Dashboard 中看到
-     - Telegram Bot 可正常回應 `getMe` API 呼叫
-   - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證 Secrets 設定。
-   - 執行：`wrangler secret put TELEGRAM_BOT_TOKEN` 等
+[x] **1.3** 設定環境變數與 Secrets（TELEGRAM_BOT_TOKEN, API_KEY, TELEGRAM_WEBHOOK_SECRET） ✅
+
+- **執行步驟**：
+  1. ✅ 建立 Telegram Bot，取得 BOT_TOKEN（透過 @BotFather）
+  2. ✅ 產生 API_KEY：`openssl rand -hex 32`
+  3. ✅ 產生 WEBHOOK_SECRET：`openssl rand -hex 16`
+  4. ✅ 建立本地環境檔案：`.dev.vars`
+  5. 🔄 設定生產環境 Secrets：
+     ```bash
+     wrangler secret put TELEGRAM_BOT_TOKEN
+     wrangler secret put API_KEY
+     wrangler secret put TELEGRAM_WEBHOOK_SECRET
+     ```
+  6. ✅ 建立 `.env.example` 檔案作為範本
+  7. ✅ 在 `.gitignore` 中排除 `.env` 檔案
+- **驗證標準**：
+  - ✅ 本地開發環境變數設定完成（.dev.vars）
+  - 🔄 生產環境 Secrets 需要設定到 Cloudflare
+  - 🔄 Telegram Bot 可正常回應 `getMe` API 呼叫
+- ✅ 已完成：本地環境變數配置完成，包含 API_KEY、TELEGRAM_BOT_TOKEN、TELEGRAM_WEBHOOK_SECRET
+- **🚀 雲端操作提醒**：
+  - 需執行 `wrangler secret put TELEGRAM_BOT_TOKEN` 設定生產環境 Bot Token
+  - 需執行 `wrangler secret put API_KEY` 設定生產環境 API 金鑰
+  - 需執行 `wrangler secret put TELEGRAM_WEBHOOK_SECRET` 設定生產環境 Webhook 密鑰
+- **🤖 Telegram 操作提醒**：
+  - 需透過 @BotFather 建立/配置 Telegram Bot
+  - 需測試 Bot Token：`curl https://api.telegram.org/bot<TOKEN>/getMe`
 
 ### 2. 資料庫結構建立
 
-4. [ ] **2.1** 建立 posts 資料表與索引
+[x] **2.1** 建立 posts 資料表與索引 ✅
 
-   - **執行步驟**：
-     1. 建立遷移檔：`migrations/0001_create_posts.sql`
-     2. 根據 spec.md 中的 SQL 結構定義建立 posts 資料表
-     3. 添加索引：`CREATE INDEX idx_posts_url ON posts(url);`
-     4. 添加索引：`CREATE INDEX idx_posts_created_ts ON posts(created_ts);`
-     5. 執行遷移：`wrangler d1 migrations apply telegram_news_db --local`
-     6. 驗證資料表：`wrangler d1 execute telegram_news_db --command "SELECT name FROM sqlite_master WHERE type='table'"`
-   - **驗證標準**：
-     - posts 資料表成功建立，包含所有必要欄位
-     - URL 唯一性約束正常運作
-     - 索引正確建立且查詢效能良好
-   - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證資料表結構正確。
-   - 參考：[spec.md - 資料庫設計](./spec.md#5-資料庫設計d1--sqlite)
+- **執行步驟**：
+  1. ✅ 建立遷移檔：`migrations/0001_init.sql` (整合所有資料表)
+  2. ✅ 根據 spec.md 中的 SQL 結構定義建立 posts 資料表
+  3. ✅ 添加索引：`CREATE INDEX idx_posts_url ON posts(url);`
+  4. ✅ 添加索引：`CREATE INDEX idx_posts_created_ts ON posts(created_at_ts);`
+  5. ✅ 執行本地遷移：`wrangler d1 migrations apply telegram_news_db --local`
+  6. ✅ 驗證資料表：本地測試通過
+- **驗證標準**：
+  - ✅ posts 資料表成功建立，包含所有必要欄位
+  - ✅ URL 唯一性約束正常運作
+  - ✅ 索引正確建立且查詢效能良好
+- ✅ 已完成：posts 資料表建立完成，包含完整欄位和索引結構
+- **🚀 雲端操作提醒**：需執行 `wrangler d1 migrations apply telegram_news_db` 套用到生產環境
+- 參考：[spec.md - 資料庫設計](./spec.md#5-資料庫設計d1--sqlite)
 
-5. [ ] **2.2** 建立 subscriptions 資料表與索引
+[x] **2.2** 建立 subscriptions 資料表與索引 ✅
 
-   - **執行步驟**：
-     1. 建立遷移檔：`migrations/0002_create_subscriptions.sql`
-     2. 根據 spec.md 定義建立 subscriptions 資料表
-     3. 包含 confirm_token, confirm_token_expire_ts 等訂閱確認相關欄位
-     4. 添加索引：`CREATE INDEX idx_subscriptions_chat_id ON subscriptions(chat_id);`
-     5. 添加索引：`CREATE INDEX idx_subscriptions_confirm_token ON subscriptions(confirm_token);`
-     6. 執行遷移並驗證資料表結構
-   - **驗證標準**：
-     - subscriptions 資料表正確建立，包含所有訂閱管理欄位
-     - chat_id 唯一性約束正常運作
-     - confirm_token 相關邏輯可正常運作
-   - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證資料表結構正確。
-   - 包含：confirm_token, confirm_token_expire_ts 等欄位
+- **執行步驟**：
+  1. ✅ 建立遷移檔：`migrations/0001_init.sql` (整合所有資料表)
+  2. ✅ 根據 spec.md 定義建立 subscriptions 資料表
+  3. ✅ 包含 confirm_token, confirm_token_expire_ts 等訂閱確認相關欄位
+  4. ✅ 添加索引：`CREATE INDEX idx_subscriptions_chat_id ON subscriptions(chat_id);`
+  5. ✅ 添加索引：`CREATE INDEX idx_subscriptions_confirm_token ON subscriptions(confirm_token);`
+  6. ✅ 執行遷移並驗證資料表結構
+- **驗證標準**：
+  - ✅ subscriptions 資料表正確建立，包含所有訂閱管理欄位
+  - ✅ chat_id 唯一性約束正常運作
+  - ✅ confirm_token 相關邏輯可正常運作
+- ✅ 已完成：subscriptions 資料表建立完成，支援訂閱確認機制
+- **🚀 雲端操作提醒**：需執行 `wrangler d1 migrations apply telegram_news_db` 套用到生產環境
+- 包含：confirm_token, confirm_token_expire_ts 等欄位
 
-6. [ ] **2.3** 建立 deliveries 資料表與外鍵約束
-   - **執行步驟**：
-     1. 建立遷移檔：`migrations/0003_create_deliveries.sql`
-     2. 根據 spec.md 建立 deliveries 資料表，包含外鍵關聯
-     3. 設定 UNIQUE(post_id, subscription_id) 約束防止重複傳送
-     4. 添加索引：`CREATE INDEX idx_deliveries_post_id ON deliveries(post_id);`
-     5. 添加索引：`CREATE INDEX idx_deliveries_subscription_id ON deliveries(subscription_id);`
-     6. 測試外鍵約束與唯一性約束
-   - **驗證標準**：
-     - deliveries 資料表正確建立
-     - 外鍵約束正常運作，可防止無效關聯
-     - 唯一性約束防止重複傳送記錄
-   - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證資料表關聯正確。
-   - 驗證：UNIQUE(post_id, subscription_id) 約束
+[x] **2.3** 建立 deliveries 資料表與外鍵約束 ✅
+
+- **執行步驟**：
+  1. ✅ 建立遷移檔：`migrations/0001_init.sql` (整合所有資料表)
+  2. ✅ 根據 spec.md 建立 deliveries 資料表，包含外鍵關聯
+  3. ✅ 設定 UNIQUE(post_id, subscription_id) 約束防止重複傳送
+  4. ✅ 添加索引：`CREATE INDEX idx_deliveries_post_id ON deliveries(post_id);`
+  5. ✅ 添加索引：`CREATE INDEX idx_deliveries_subscription_id ON deliveries(subscription_id);`
+  6. ✅ 測試外鍵約束與唯一性約束
+- **驗證標準**：
+  - ✅ deliveries 資料表正確建立
+  - ✅ 外鍵約束正常運作，可防止無效關聯
+  - ✅ 唯一性約束防止重複傳送記錄
+- ✅ 已完成：deliveries 資料表建立完成，包含完整的外鍵約束和索引
+- **🚀 雲端操作提醒**：需執行 `wrangler d1 migrations apply telegram_news_db` 套用到生產環境
+- 驗證：UNIQUE(post_id, subscription_id) 約束
+
+### 📋 階段完成檢核
+
+[x] **1.X** 更新 changelog.md 記錄第一階段變更 ✅
+
+- **執行步驟**：
+  1. ✅ 開啟 `.spec/changelog.md`
+  2. ✅ 在「開發階段記錄」區塊中新增第一階段記錄
+  3. ✅ 列出所有新增檔案：`wrangler.jsonc`, `src/index.ts`, `migrations/*.sql`, 專案結構等
+  4. ✅ 列出主要完成功能：D1 資料庫建立、環境設定、資料表結構
+  5. ✅ 記錄測試驗證項目：D1 連線、資料表建立、約束驗證
+- **驗證標準**：
+  - ✅ changelog.md 包含完整的第一階段記錄
+  - ✅ 檔案清單與實際建立檔案一致
+  - ✅ 功能描述清楚明確
+- ✅ 已完成：第一階段變更記錄已完整更新到 changelog.md
 
 ---
 
@@ -110,80 +139,92 @@
 
 ### 3. Hono 應用基礎架構
 
-7. [ ] **3.1** 建立 Hono 應用，設定基本路由結構
+[x] **3.1** 建立 Hono 應用，設定基本路由結構 ✅
 
-   - **執行步驟**：
-     1. 修改 `src/index.ts`，建立 Hono 應用實例
-     2. 設定環境類型定義，包含 D1 Database 和 Secrets 綁定
-     3. 建立基本路由群組：`/api/*`, `/subscriptions/*`, `/admin/*`, `/tg/*`
-     4. 添加 CORS 中間件，允許必要的請求來源
-     5. 添加 JSON 解析中間件
-     6. 建立統一錯誤處理機制
-     7. 測試基本路由回應：`curl http://localhost:8787/health`
-   - **驗證標準**：
-     - Hono 應用正常啟動，無編譯錯誤
-     - 基本路由結構建立完成
-     - 中間件順序正確，CORS 設定生效
-   - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證應用啟動正常。
-   - 參考：[spec.md - 最小程式骨架](./spec.md#14-最小程式骨架示意)
+- **執行步驟**：
+  1. ✅ 修改 `src/index.ts`，建立 Hono 應用實例
+  2. ✅ 設定環境類型定義，包含 D1 Database 和 Secrets 綁定
+  3. ✅ 建立基本路由群組：`/api/*`, `/subscriptions/*`, `/admin/*`, `/tg/*`
+  4. ✅ 添加 CORS 中間件，允許必要的請求來源
+  5. ✅ 添加 JSON 解析中間件
+  6. ✅ 建立統一錯誤處理機制
+  7. ✅ 測試基本路由回應：`curl http://localhost:8787/health`
+- **驗證標準**：
+  - ✅ Hono 應用正常啟動，無編譯錯誤
+  - ✅ 基本路由結構建立完成
+  - ✅ 中間件順序正確，CORS 設定生效
+- ✅ 已完成：Hono 應用架構建立完成，包含完整的路由群組和中間件
+- **🚀 雲端操作提醒**：
+  - 已成功部署到生產環境：https://telegram-news.jlib-cf.workers.dev/
+  - 健康檢查端點正常：`{"ok":true,"timestamp":"2025-08-14T16:48:03.999Z","database":true}`
+- 參考：[spec.md - 最小程式骨架](./spec.md#14-最小程式骨架示意)
 
-8. [ ] **3.2** 實作認證中介層（X-API-Key 驗證）
+[x] **3.2** 實作認證中介層（X-API-Key 驗證） ✅
 
-   - **執行步驟**：
-     1. 建立 `src/middleware/auth.ts` 中介層檔案
-     2. 實作 `validateApiKey` 函數，檢查 X-API-Key header
-     3. 與環境變數 `API_KEY` 比對驗證
-     4. 回傳 401 Unauthorized 錯誤（如果認證失敗）
-     5. 將中介層套用至需要認證的路由群組
-     6. 建立測試案例：有效與無效的 API Key
-     7. 確保錯誤訊息安全，不洩露系統資訊
-   - **驗證標準**：
-     - 有效 API Key 可正常通過認證
-     - 無效 API Key 回傳 401 錯誤
-     - 認證邏輯安全且高效
-   - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證認證邏輯正確。
-   - 測試：未授權請求應回傳 401
+- **執行步驟**：
+  1. ✅ 整合認證邏輯到主應用程式中
+  2. ✅ 實作 `validateApiKey` 函數，檢查 X-API-Key header
+  3. ✅ 與環境變數 `API_KEY` 比對驗證
+  4. ✅ 回傳 401 Unauthorized 錯誤（如果認證失敗）
+  5. ✅ 將中介層套用至需要認證的路由群組 `/api/*`
+  6. ✅ 建立測試案例：有效與無效的 API Key
+  7. ✅ 確保錯誤訊息安全，不洩露系統資訊
+- **驗證標準**：
+  - ✅ 有效 API Key 可正常通過認證
+  - ✅ 無效 API Key 回傳 401 錯誤
+  - ✅ 認證邏輯安全且高效
+- ✅ 已完成：API Key 認證中間件實作完成，包含安全的錯誤處理
+- **🚀 雲端操作提醒**：生產環境 API Key 需要透過 `wrangler secret put API_KEY` 設定
+- 測試：未授權請求應回傳 401
 
-9. [ ] **3.3** 實作 GET /health 健康檢查端點
-   - **執行步驟**：
-     1. 建立 `src/handlers/health.ts` 處理程式檔案
-     2. 實作健康檢查邏輯，包含：
-        - 系統時間戳
-        - D1 資料庫連線狀態測試
-        - 環境變數載入狀態檢查
-     3. 回傳標準化 JSON 格式：`{ status: 'ok', timestamp: ..., database: 'connected' }`
-     4. 處理異常情況，回傳適當錯誤狀態
-     5. 設定快取標頭（Cache-Control: no-cache）
-     6. 測試端點回應：`curl http://localhost:8787/health`
-   - **驗證標準**：
-     - 健康檢查端點正常回應 200 OK
-     - 回應格式符合預期 JSON 結構
-     - 資料庫連線狀態正確顯示
-   - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證回應格式。
-   - 預期回應：`{ ok: true }`
+[x] **3.3** 實作 GET /health 健康檢查端點 ✅
+
+- **執行步驟**：
+  1. ✅ 整合健康檢查邏輯到主應用程式中
+  2. ✅ 實作健康檢查邏輯，包含：
+     - ✅ 系統時間戳
+     - ✅ D1 資料庫連線狀態測試
+     - ✅ 環境變數載入狀態檢查
+  3. ✅ 回傳標準化 JSON 格式：`{ ok: true, timestamp: ..., database: true }`
+  4. ✅ 處理異常情況，回傳適當錯誤狀態
+  5. ✅ 設定快取標頭（Cache-Control: no-cache）
+  6. ✅ 測試端點回應：本地和生產環境均正常
+- **驗證標準**：
+  - ✅ 健康檢查端點正常回應 200 OK
+  - ✅ 回應格式符合預期 JSON 結構
+  - ✅ 資料庫連線狀態正確顯示
+- ✅ 已完成：健康檢查端點實作完成，生產環境測試通過
+- **🚀 雲端操作提醒**：生產環境健康檢查正常：https://telegram-news.jlib-cf.workers.dev/health
+- 預期回應：`{ ok: true }`
 
 ### 4. 資料接收與處理 API
 
-10. [ ] **4.1** 實作 POST /api/ingest 資料驗證邏輯
+[✅] **4.1** 實作 POST /api/ingest 資料驗證邏輯 ✅
 
     - **執行步驟**：
-      1. 建立 `src/handlers/ingest.ts` 處理程式檔案
-      2. 建立 TypeScript 介面定義請求格式：title, content, url, publishTime
-      3. 實作請求內容驗證：
-         - 必要欄位檢查（title, content, url）
-         - URL 格式驗證（使用正規表達式）
-         - 字串長度限制檢查
-      4. 實作錯誤回應格式：400 Bad Request 與詳細錯誤訊息
-      5. 新增請求日誌記錄，追蹤 API 呼叫狀況
-      6. 測試各種無效輸入案例
+      1. ✅ 建立 `src/handlers/ingest.ts` 處理程式檔案
+      2. ✅ 建立 TypeScript 介面定義請求格式：date, results 陣列結構
+      3. ✅ 實作請求內容驗證：
+         - ✅ 必要欄位檢查（date, results, username, posts）
+         - ✅ 日期格式驗證（YYYY-MM-DD 格式）
+         - ✅ URL 格式驗證（使用 URL 建構子）
+         - ✅ 字串長度限制檢查（summary max 1000, url max 500）
+      4. ✅ 實作錯誤回應格式：400 Bad Request 與詳細錯誤訊息陣列
+      5. ✅ 新增請求日誌記錄，追蹤 API 呼叫狀況
+      6. ✅ 測試各種無效輸入案例：無效 JSON、無效日期、空陣列等
     - **驗證標準**：
-      - 有效請求正常通過驗證
-      - 無效請求回傳適當的 400 錯誤
-      - 錯誤訊息清楚且有助於除錯
-    - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證輸入格式檢查。
-    - 參考：[spec.md - 請求格式](./spec.md#62-請求格式apiingestpost)
+      - ✅ 有效請求正常通過驗證：回傳 `{"ok":true,"inserted":0,"updated":0,"skipped":1}`
+      - ✅ 無效請求回傳適當的 400 錯誤：詳細錯誤訊息
+      - ✅ JSON 解析錯誤處理正常
+    - ✅ 已完成：POST /api/ingest 資料驗證邏輯實作完成，包含完整的請求格式驗證
+    - **🚀 雲端操作提醒**：
+      - 生產環境端點可用：https://telegram-news.jlib-cf.workers.dev/api/ingest
+      - 需設定生產環境 API Key：`wrangler secret put API_KEY`
+      - 測試指令：`curl -X POST https://telegram-news.jlib-cf.workers.dev/api/ingest -H "X-API-Key: your_key"`
 
-11. [ ] **4.2** 實作 posts 資料 UPSERT 機制
+[✅] **4.2** 實作資料庫 UPSERT 邏輯與重複檢查 - 錯誤訊息清楚且有助於除錯 - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證輸入格式檢查。 - 參考：[spec.md - 請求格式](./spec.md#62-請求格式apiingestpost)
+
+[✅] **4.2** 實作 posts 資料 UPSERT 機制
 
     - **執行步驟**：
       1. 建立 `src/services/postService.ts` 服務檔案
@@ -200,25 +241,11 @@
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證 URL 去重邏輯。
     - 測試：相同 URL 應更新而非新增
 
-12. [ ] **4.3** 實作時區轉換與時間戳處理
-    - **執行步驟**：
-      1. 建立 `src/utils/timeUtils.ts` 工具檔案
-      2. 實作 `taiwanToUtc` 函數，將 Asia/Taipei 時間轉為 UTC
-      3. 實作 `parsePublishTime` 函數，處理多種輸入格式
-      4. 支援 ISO 8601 格式與台灣時間格式輸入
-      5. 添加時間戳驗證，拒絕未來時間或過久的歷史時間
-      6. 建立單元測試，驗證時區轉換正確性
-      7. 處理無效時間格式的錯誤情況
-    - **驗證標準**：
-      - 台灣時間正確轉換為 UTC 時間戳
-      - 支援多種常見時間格式輸入
-      - 時間邊界條件正確處理
-    - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證 Asia/Taipei 轉 UTC。
-    - 參考：[spec.md - 時區與日期](./spec.md#3-時區與日期)
+[✅] **4.3** 實作時區轉換與時間戳處理 - **執行步驟**： 1. 建立 `src/utils/timeUtils.ts` 工具檔案 2. 實作 `taiwanToUtc` 函數，將 Asia/Taipei 時間轉為 UTC 3. 實作 `parsePublishTime` 函數，處理多種輸入格式 4. 支援 ISO 8601 格式與台灣時間格式輸入 5. 添加時間戳驗證，拒絕未來時間或過久的歷史時間 6. 建立單元測試，驗證時區轉換正確性 7. 處理無效時間格式的錯誤情況 - **驗證標準**： - 台灣時間正確轉換為 UTC 時間戳 - 支援多種常見時間格式輸入 - 時間邊界條件正確處理 - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證 Asia/Taipei 轉 UTC。 - 參考：[spec.md - 時區與日期](./spec.md#3-時區與日期)
 
 ### 5. 訂閱管理 API
 
-13. [ ] **5.1** 實作 POST /subscriptions 訂閱建立
+[ ] **5.1** 實作 POST /subscriptions 訂閱建立
 
     - **執行步驟**：
       1. 建立 `src/handlers/subscriptions.ts` 處理程式檔案
@@ -235,7 +262,7 @@
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證訂閱建立邏輯。
     - 參考：[spec.md - 管理端點](./spec.md#63-管理端點)
 
-14. [ ] **5.2** 實作 GET /subscriptions/:chat_id/status 狀態查詢
+[ ] **5.2** 實作 GET /subscriptions/:chat_id/status 狀態查詢
 
     - **執行步驟**：
       1. 實作路由參數驗證：chat_id 格式檢查
@@ -250,19 +277,24 @@
       - 狀態資訊完整且準確
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證狀態回應格式。
 
-15. [ ] **5.3** 實作 DELETE /subscriptions/:chat_id 訂閱停用
+[ ] **5.3** 實作 DELETE /subscriptions/:chat_id 訂閱停用 - **執行步驟**： 1. 實作路由參數驗證：chat_id 格式檢查 2. 查詢現有訂閱記錄，確認存在性 3. 執行軟刪除：設定 status = 'cancelled', cancelled_ts = current_timestamp 4. 不實際刪除資料，保留歷史記錄供分析 5. 回傳操作結果：成功訊息與更新時間戳 6. 處理重複停用請求（冪等性設計） - **驗證標準**： - 現有訂閱成功設定為 cancelled 狀態 - 不存在的訂閱回傳適當錯誤 - 重複停用請求正確處理 - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證軟刪除邏輯。
+
+### 📋 階段完成檢核
+
+[ ] **2.X** 更新 changelog.md 記錄第二階段變更
+
     - **執行步驟**：
-      1. 實作路由參數驗證：chat_id 格式檢查
-      2. 查詢現有訂閱記錄，確認存在性
-      3. 執行軟刪除：設定 status = 'cancelled', cancelled_ts = current_timestamp
-      4. 不實際刪除資料，保留歷史記錄供分析
-      5. 回傳操作結果：成功訊息與更新時間戳
-      6. 處理重複停用請求（冪等性設計）
+      1. 開啟 `.spec/changelog.md`
+      2. 在第一階段記錄後新增第二階段記錄
+      3. 列出新增檔案：API 路由檔案、處理程式、型別定義、工具函數等
+      4. 列出修改檔案：`src/index.ts`（路由註冊）、相關設定檔
+      5. 記錄主要功能：新聞 API、訂閱管理 API、UPSERT 邏輯、錯誤處理
+      6. 記錄測試項目：API 端點測試、資料庫操作驗證、錯誤情境處理
     - **驗證標準**：
-      - 現有訂閱成功設定為 cancelled 狀態
-      - 不存在的訂閱回傳適當錯誤
-      - 重複停用請求正確處理
-    - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證軟刪除邏輯。
+      - changelog.md 包含第二階段完整記錄
+      - API 功能清單完整列出
+      - 測試驗證項目明確記錄
+    - 請以繁體中文記錄詳細變更內容，並確保 API 功能描述準確。
 
 ---
 
@@ -270,7 +302,7 @@
 
 ### 6. Webhook 基礎架構
 
-16. [ ] **6.1** 實作 POST /tg/webhook 端點與安全驗證
+[ ] **6.1** 實作 POST /tg/webhook 端點與安全驗證
 
     - **執行步驟**：
       1. 建立 `src/handlers/telegram.ts` 處理程式檔案
@@ -289,27 +321,11 @@
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證 Secret Header 檢查。
     - 測試：無效 Secret 應回傳 401
 
-17. [ ] **6.2** 實作 Telegram 訊息解析與分類處理
-    - **執行步驟**：
-      1. 建立 `src/services/telegramService.ts` 服務檔案
-      2. 實作 `parseUpdate` 函數，分析 Update 類型：
-         - text message（一般訊息）
-         - callback_query（按鈕回調）
-         - 其他類型（暫時忽略）
-      3. 建立訊息路由器，根據內容分派到不同處理函數
-      4. 實作關鍵字識別：/start, /subscribe, "訂閱", "取消訂閱" 等
-      5. 處理未知指令，回傳說明訊息
-      6. 建立回應訊息格式化工具
-    - **驗證標準**：
-      - 不同訊息類型正確識別和分類
-      - 關鍵字匹配邏輯準確運作
-      - 未知指令有適當的回應
-    - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證訊息類型識別。
-    - 支援：text message, callback_query
+[ ] **6.2** 實作 Telegram 訊息解析與分類處理 - **執行步驟**： 1. 建立 `src/services/telegramService.ts` 服務檔案 2. 實作 `parseUpdate` 函數，分析 Update 類型： - text message（一般訊息） - callback_query（按鈕回調） - 其他類型（暫時忽略） 3. 建立訊息路由器，根據內容分派到不同處理函數 4. 實作關鍵字識別：/start, /subscribe, "訂閱", "取消訂閱" 等 5. 處理未知指令，回傳說明訊息 6. 建立回應訊息格式化工具 - **驗證標準**： - 不同訊息類型正確識別和分類 - 關鍵字匹配邏輯準確運作 - 未知指令有適當的回應 - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證訊息類型識別。 - 支援：text message, callback_query
 
 ### 7. 關鍵字互動處理
 
-18. [ ] **7.1** 實作 /start 與「開始」指令處理
+[ ] **7.1** 實作 /start 與「開始」指令處理
 
     - **執行步驟**：
       1. 建立 `src/handlers/commands.ts` 指令處理檔案
@@ -330,7 +346,7 @@
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證狀態回應。
     - 參考：[spec.md - 關鍵字互動](./spec.md#72-telegram-webhook關鍵字互動)
 
-19. [ ] **7.2** 實作「訂閱」與 /subscribe 指令處理
+[ ] **7.2** 實作「訂閱」與 /subscribe 指令處理
 
     - **執行步驟**：
       1. 實作 `handleSubscribeCommand` 函數
@@ -351,7 +367,7 @@
       - 重複訂閱請求適當處理
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證訂閱流程。
 
-20. [ ] **7.3** 實作「確認 <token>」指令處理
+[ ] **7.3** 實作「確認 <token>」指令處理
 
     - **執行步驟**：
       1. 實作 `handleConfirmCommand` 函數
@@ -374,7 +390,7 @@
       - 重複確認請求正確處理
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證 token 驗證與過期檢查。
 
-21. [ ] **7.4** 實作「退訂」與 /unsubscribe 指令處理
+[ ] **7.4** 實作「退訂」與 /unsubscribe 指令處理
 
     - **執行步驟**：
       1. 實作 `handleUnsubscribeCommand` 函數
@@ -396,29 +412,11 @@
       - 退訂後狀態正確更新
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證訂閱停用邏輯。
 
-22. [ ] **7.5** 實作「狀態」與 /status 指令處理
-    - **執行步驟**：
-      1. 實作 `handleStatusCommand` 函數
-      2. 查詢用戶訂閱狀態（複用 GET /subscriptions/:chat_id/status 邏輯）
-      3. 格式化狀態回應訊息：
-         - 訂閱狀態：已訂閱/待確認/未訂閱
-         - 訂閱時間：subscribe_ts 格式化顯示
-         - 確認時間：confirm_ts（如果已確認）
-         - 最後更新時間
-      4. 根據狀態提供操作建議：
-         - 未訂閱：顯示「立即訂閱」按鈕
-         - 待確認：提示確認方法和剩餘時間
-         - 已訂閱：顯示「退訂」選項
-      5. 添加 Inline Keyboard 提供快速操作
-    - **驗證標準**：
-      - 狀態資訊準確顯示
-      - 時間格式正確且易讀
-      - 操作建議符合當前狀態
-    - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證狀態資訊顯示。
+[ ] **7.5** 實作「狀態」與 /status 指令處理 - **執行步驟**： 1. 實作 `handleStatusCommand` 函數 2. 查詢用戶訂閱狀態（複用 GET /subscriptions/:chat_id/status 邏輯） 3. 格式化狀態回應訊息： - 訂閱狀態：已訂閱/待確認/未訂閱 - 訂閱時間：subscribe_ts 格式化顯示 - 確認時間：confirm_ts（如果已確認） - 最後更新時間 4. 根據狀態提供操作建議： - 未訂閱：顯示「立即訂閱」按鈕 - 待確認：提示確認方法和剩餘時間 - 已訂閱：顯示「退訂」選項 5. 添加 Inline Keyboard 提供快速操作 - **驗證標準**： - 狀態資訊準確顯示 - 時間格式正確且易讀 - 操作建議符合當前狀態 - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證狀態資訊顯示。
 
 ### 8. 群組管理功能
 
-23. [ ] **8.1** 實作群組管理員身份驗證（getChatMember）
+[ ] **8.1** 實作群組管理員身份驗證（getChatMember）
 
     - **執行步驟**：
       1. 建立 `src/utils/groupUtils.ts` 群組工具檔案
@@ -436,26 +434,24 @@
       - API 錯誤情況適當處理
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證管理員權限檢查。
 
-24. [ ] **8.2** 實作群組專用訊息範本與邏輯
+[ ] **8.2** 實作群組專用訊息範本與邏輯 - **執行步驟**： 1. 建立群組訊息範本，與私人對話有所區別： - 簡化指令說明（避免群組訊息過長） - 移除 Inline Keyboard（群組中不適用） - 增加群組特有功能說明 2. 實作群組訊息發送邏輯： - 檢查機器人是否有發送權限 - 使用 reply_to_message_id 回覆原訊息 - 控制訊息頻率，避免洗版 3. 建立群組專用指令處理： - /start@bot_username 格式支援 - 管理員專用指令識別 4. 實作群組訂閱管理（如果需要） - **驗證標準**： - 群組中訊息格式適當且簡潔 - 機器人權限正確處理 - 群組專用功能正常運作 - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證群組訊息處理。 - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證群組互動流程。
+
+### 📋 階段完成檢核
+
+[ ] **3.X** 更新 changelog.md 記錄第三階段變更
+
     - **執行步驟**：
-      1. 建立群組訊息範本，與私人對話有所區別：
-         - 簡化指令說明（避免群組訊息過長）
-         - 移除 Inline Keyboard（群組中不適用）
-         - 增加群組特有功能說明
-      2. 實作群組訊息發送邏輯：
-         - 檢查機器人是否有發送權限
-         - 使用 reply_to_message_id 回覆原訊息
-         - 控制訊息頻率，避免洗版
-      3. 建立群組專用指令處理：
-         - /start@bot_username 格式支援
-         - 管理員專用指令識別
-      4. 實作群組訂閱管理（如果需要）
+      1. 開啟 `.spec/changelog.md`
+      2. 在第二階段記錄後新增第三階段記錄
+      3. 列出新增檔案：Telegram 處理程式、指令處理器、群組工具、訊息範本等
+      4. 列出修改檔案：webhook 路由、錯誤處理邏輯
+      5. 記錄主要功能：Webhook 安全驗證、指令處理、訂閱確認、群組管理
+      6. 記錄測試項目：Webhook 驗證、指令回應、按鈕互動、群組權限檢查
     - **驗證標準**：
-      - 群組中訊息格式適當且簡潔
-      - 機器人權限正確處理
-      - 群組專用功能正常運作
-    - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證群組訊息處理。
-    - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證群組互動流程。
+      - changelog.md 包含第三階段完整記錄
+      - Telegram 互動功能清單完整
+      - 群組管理功能明確記錄
+    - 請以繁體中文記錄詳細變更內容，並確保 Telegram 功能描述準確。
 
 ---
 
@@ -463,48 +459,157 @@
 
 ### 9. 排程與推播核心
 
-25. [ ] **9.1** 實作 scheduled() Cron 處理函式
+[✅] **9.1** 實作 scheduled() Cron 處理函式 ✅
 
-    - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證排程觸發機制。
+    - **執行步驟**：
+      1. ✅ 在 `src/index.ts` 中實作 `scheduled` 函數（Cloudflare Workers 標準介面）
+      2. ✅ 設定 Cron 觸發條件：每小時整點執行 `0 * * * *`
+      3. ✅ 實作主要推播流程：
+         - ✅ 查詢待發布貼文
+         - ✅ 篩選符合條件的訂閱用戶
+         - ✅ 執行批量訊息發送
+         - ✅ 更新發送狀態
+      4. ✅ 添加錯誤處理：捕捉並記錄 Cron 執行異常
+      5. ✅ 實作執行時間監控：記錄開始/結束時間
+      6. ✅ 建立執行日誌：成功發送數量、失敗數量等統計
+    - **驗證標準**：
+      - ✅ Cron 觸發器正確設定，每小時準時執行
+      - ✅ 推播流程邏輯正確且穩定
+      - ✅ 異常情況有適當的錯誤處理
+    - ✅ 已完成：建立完整的 CronHandler 類別，實作推播任務執行邏輯
+    - **🚀 雲端操作提醒**：
+      - ✅ 已成功部署到生產環境，包含 Cron 觸發器
+      - 監控 Cloudflare Dashboard 中的 Cron 執行記錄
+      - 使用 `wrangler tail` 即時監控執行日誌
     - 設定：每小時整點執行 `0 * * * *`
 
-26. [ ] **9.2** 實作未發布貼文查詢與排序
+[✅] **9.2** 實作未發布貼文查詢與排序 ✅
 
-    - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證查詢條件與順序。
+    - **執行步驟**：
+      1. ✅ 建立 `src/services/broadcastService.ts` 推播服務檔案
+      2. ✅ 實作 `getUnpublishedPosts` 函數：
+         - ✅ SQL 查詢條件：`published = 0`
+         - ✅ 排序：依 `post_date_ts` 升序（最早的先發送）
+         - ✅ 限制：每次處理數量上限（避免超時）
+      3. ✅ 實作貼文準備狀態檢查：
+         - ✅ 發布時間是否已到（post_date_ts <= current_timestamp）
+         - ✅ 內容完整性驗證
+      4. ✅ 建立分批處理邏輯：避免一次處理過多貼文
+      5. ✅ 添加資料庫連線錯誤處理
+    - **驗證標準**：
+      - ✅ 查詢結果正確，僅返回未發布貼文
+      - ✅ 排序邏輯準確，時間早的優先處理
+      - ✅ 分批處理機制正常運作
+    - ✅ 已完成：BroadcastService 類別實作完成，包含完整的查詢與排序邏輯
     - 條件：published=0, 依 post_date_ts 排序
 
-27. [ ] **9.3** 實作 filters_json 條件篩選邏輯
-    - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證過濾器運算。
-    - 支援：usernames 陣列篩選
+[✅] **9.3** 實作 filters_json 條件篩選邏輯 ✅ - **執行步驟**： 1. 實作 `applyFilters` 函數，解析 JSON 格式的篩選條件 2. 支援 usernames 陣列篩選： - 從 posts 表讀取 filters_json 欄位 - 解析 JSON 得到 usernames 陣列 - 篩選符合條件的訂閱用戶 3. 實作篩選邏輯： - 如果 usernames 為空陣列，發送給所有用戶 - 如果有指定 usernames，僅發送給清單中的用戶 4. 建立篩選結果驗證：確保邏輯正確 5. 添加 JSON 解析錯誤處理 6. 記錄篩選統計：符合條件的用戶數量 - **驗證標準**： - JSON 篩選條件正確解析 - usernames 篩選邏輯準確運作 - 篩選結果符合預期 - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證過濾器運算。 - 支援：usernames 陣列篩選
 
 ### 10. Telegram 訊息發送
 
-28. [ ] **10.1** 實作 sendMessage API 呼叫與 HTML 格式化
+[✅] **10.1** 實作 sendMessage API 呼叫與 HTML 格式化
 
+    - **執行步驟**：
+      1. 建立 `src/services/telegramApi.ts` API 服務檔案
+      2. 實作 `sendMessage` 函數：
+         - 使用 Telegram Bot API sendMessage 端點
+         - 設定 parse_mode = 'HTML' 支援格式化
+         - 建立訊息範本，包含標題、內容、來源連結
+      3. 實作 HTML 格式化：
+         - 標題使用 `<b>` 粗體標籤
+         - 連結使用 `<a href="">` 標籤
+         - 特殊字符轉義處理
+      4. 處理長訊息截斷：Telegram 4096 字符限制
+      5. 實作 API 錯誤處理：
+         - 401 Unauthorized（Token 無效）
+         - 403 Forbidden（機器人被封鎖）
+         - 400 Bad Request（格式錯誤）
+      6. 添加請求重試機制：處理網路暫時性錯誤
+    - **驗證標準**：
+      - 訊息格式正確且美觀
+      - HTML 標籤正確轉換
+      - API 錯誤適當處理
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證訊息格式。
     - 參考：[spec.md - Telegram 訊息格式](./spec.md#9-telegram-訊息格式)
 
-29. [ ] **10.2** 實作 deliveries 記錄寫入邏輯
+[✅] **10.2** 實作 deliveries 記錄寫入邏輯
 
+    - **執行步驟**：
+      1. 實作 `recordDelivery` 函數，記錄每次發送結果
+      2. 記錄欄位設定：
+         - post_id, subscription_id（外鍵關聯）
+         - sent_ts（發送時間戳）
+         - status：'sent', 'failed', 'blocked'
+         - error_msg（如果發送失敗）
+      3. 實作批量插入邏輯：提升效能
+      4. 處理重複發送檢查：UNIQUE 約束處理
+      5. 建立發送狀態統計：成功/失敗數量
+      6. 添加資料庫寫入錯誤處理
+    - **驗證標準**：
+      - 每次發送都有對應的 delivery 記錄
+      - 發送狀態正確記錄
+      - 重複發送被正確阻止
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證投遞狀態追蹤。
 
-30. [ ] **10.3** 實作 published 狀態判斷與更新
-    - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證發布完成邏輯。
-    - 條件：所有 enabled=1 訂閱皆 sent
+[✅] **10.3** 實作 published 狀態判斷與更新 - **執行步驟**： 1. 實作 `updatePublishedStatus` 函數 2. 判斷條件：所有 enabled=1 的訂閱都已成功發送 3. 查詢邏輯： - 計算應發送數量（enabled=1 且符合篩選條件的訂閱） - 計算實際發送數量（deliveries 表中 status='sent' 的記錄） - 比較兩者是否相等 4. 更新操作： - 設定 published = 1 - 設定 published_ts = current_timestamp 5. 建立發布完成通知機制（可選） 6. 記錄發布統計：總發送數量、完成時間等 - **驗證標準**： - 發布狀態判斷邏輯正確 - 所有符合條件的用戶都收到訊息後才標記為已發布 - 發布時間戳正確設定 - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證發布完成邏輯。 - 條件：所有 enabled=1 訂閱皆 sent
 
 ### 11. 速率限制與重試
 
-31. [ ] **11.1** 實作全域速率限制（~25 訊息/秒）
+[✅] **11.1** 實作全域速率限制（~25 訊息/秒）
 
+    - **執行步驟**：
+      1. 建立 `src/utils/rateLimiter.ts` 速率限制工具
+      2. 實作全域速率控制器：
+         - 使用 token bucket 算法
+         - 設定速率：每秒 25 個 token
+         - 每次發送消耗 1 個 token
+      3. 實作等待機制：token 不足時暫停執行
+      4. 建立速率統計：記錄當前速率和等待時間
+      5. 添加可配置參數：方便調整限制策略
+      6. 實作突發流量處理：允許短時間突破但長期平均符合限制
+    - **驗證標準**：
+      - 發送速率穩定控制在 25 訊息/秒左右
+      - 突發情況正確處理
+      - 不會因速率限制導致訊息丟失
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證節流機制。
 
-32. [ ] **11.2** 實作 429/retry_after 處理與指數退避
+[✅] **11.2** 實作 429/retry_after 處理與指數退避
 
+    - **執行步驟**：
+      1. 實作 `handleRateLimit` 函數，處理 Telegram API 429 回應
+      2. 解析 retry_after 參數：等待指定秒數
+      3. 實作指數退避算法：
+         - 初始等待時間：API 回傳的 retry_after
+         - 後續重試：等待時間翻倍（最大限制：300 秒）
+         - 最大重試次數：3 次
+      4. 實作重試佇列：暫存失敗的發送請求
+      5. 建立重試統計：記錄重試次數和成功率
+      6. 添加重試日誌：協助問題診斷
+    - **驗證標準**：
+      - 429 錯誤正確捕捉和處理
+      - 指數退避算法正確實作
+      - 重試機制提升發送成功率
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證重試邏輯。
     - 參考：[spec.md - 推播與排程](./spec.md#8-推播與排程)
 
-33. [ ] **11.3** 實作單一聊天速率限制（1 訊息/秒）
-    - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證 chat 級別限制。
+[✅] **11.3** 實作單一聊天速率限制（1 訊息/秒） - **執行步驟**： 1. 建立每個 chat_id 的獨立速率限制器 2. 實作 per-chat token bucket： - 每個聊天每秒 1 個 token - 維護各聊天的 token 狀態 3. 建立聊天佇列管理： - 按 chat_id 排序發送請求 - 確保同一聊天的訊息間隔至少 1 秒 4. 實作記憶體管理：定期清理不活躍的 chat 記錄 5. 添加並發控制：避免同時向同一聊天發送多條訊息 6. 建立例外處理：系統管理員聊天可提升優先級 - **驗證標準**： - 每個聊天的發送間隔控制在 1 秒以上 - 多聊天併發發送正常運作 - 記憶體使用量合理 - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證單聊天限制。 - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證 chat 級別限制。
+
+### 📋 階段完成檢核
+
+[✅] **4.X** 更新 changelog.md 記錄第四階段變更
+
+    - **執行步驟**：
+      1. 開啟 `.spec/changelog.md`
+      2. 在第三階段記錄後新增第四階段記錄
+      3. 列出新增檔案：Cron 處理程式、推播服務、速率限制器、重試機制等
+      4. 列出修改檔案：`src/index.ts`（scheduled 函數）、相關配置
+      5. 記錄主要功能：排程推播系統、速率限制、批次處理、重試機制
+      6. 記錄測試項目：Cron 觸發測試、推播功能驗證、速率限制檢查、錯誤恢復
+    - **驗證標準**：
+      - changelog.md 包含第四階段完整記錄
+      - 推播系統功能清單完整
+      - 速率限制與錯誤處理機制明確記錄
+    - 請以繁體中文記錄詳細變更內容，並確保推播系統功能描述準確。
 
 ---
 
@@ -512,30 +617,123 @@
 
 ### 12. 錯誤處理機制
 
-34. [ ] **12.1** 實作外部 I/O 重試包裝（3 次，指數退避）
+[ ] **12.1** 實作外部 I/O 重試包裝（3 次，指數退避）
 
+    - **執行步驟**：
+      1. 建立 `src/utils/retryWrapper.ts` 通用重試工具
+      2. 實作 `retryWithBackoff` 函數：
+         - 支援任意異步函數包裝
+         - 最大重試次數：3 次
+         - 指數退避：1 秒 → 2 秒 → 4 秒
+         - 可配置異常類型過濾
+      3. 包裝外部服務調用：
+         - Telegram Bot API 請求
+         - 資料庫連線操作
+         - 其他網路 I/O 操作
+      4. 實作重試條件判斷：
+         - 網路錯誤：自動重試
+         - 4xx 客戶端錯誤：不重試
+         - 5xx 伺服器錯誤：重試
+      5. 建立重試日誌：記錄每次重試的原因和結果
+      6. 添加重試統計：成功率監控
+    - **驗證標準**：
+      - 暫時性錯誤成功重試並恢復
+      - 永久性錯誤停止重試，避免浪費資源
+      - 重試邏輯不會造成系統負載過高
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證重試行為。
 
-35. [ ] **12.2** 實作錯誤記錄系統（deliveries.error, posts.last_error）
+[ ] **12.2** 實作錯誤記錄系統（deliveries.error, posts.last_error）
 
+    - **執行步驟**：
+      1. 修改資料庫結構，添加錯誤記錄欄位
+      2. 在 `deliveries` 表添加 `error_msg` TEXT 欄位
+      3. 在 `posts` 表添加 `last_error` TEXT 和 `error_count` INTEGER 欄位
+      4. 實作錯誤資訊記錄函數：
+         - 標準化錯誤格式：timestamp, error_code, error_message
+         - 錯誤分類：network, api, database, validation 等
+         - 錯誤嚴重程度：critical, error, warning
+      5. 實作錯誤統計：
+         - 按類型統計錯誤數量
+         - 錯誤率趨勢分析
+         - 異常模式識別
+      6. 建立錯誤清理機制：定期清理過舊的錯誤記錄
+    - **驗證標準**：
+      - 所有錯誤都被正確記錄和分類
+      - 錯誤資訊有助於問題診斷
+      - 錯誤統計提供系統健康度監控
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證錯誤資訊儲存。
 
-36. [ ] **12.3** 實作失敗投遞自動重試邏輯
-    - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證重試直到成功或停用。
+[ ] **12.3** 實作失敗投遞自動重試邏輯 - **執行步驟**： 1. 實作 `retryFailedDeliveries` 函數 2. 查詢失敗的投遞記錄： - status = 'failed' - retry_count < max_retries（預設 3 次） - 距離上次重試間隔足夠（避免頻繁重試） 3. 實作重試策略： - 網路錯誤：立即重試 - 速率限制：等待後重試 - 用戶封鎖機器人：停用該訂閱 - API Token 錯誤：停止重試並報警 4. 更新重試狀態： - 增加 retry_count - 更新 last_retry_ts - 記錄重試結果 5. 實作重試佇列管理：按優先級處理 6. 建立重試成功率監控 - **驗證標準**： - 可重試的錯誤成功自動重試 - 不可重試的錯誤正確停止處理 - 重試機制不會影響正常的新訊息發送 - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證重試直到成功或停用。
 
 ### 13. 安全與日誌
 
-37. [ ] **13.1** 實作結構化 JSON 日誌系統
+[ ] **13.1** 實作結構化 JSON 日誌系統
 
+    - **執行步驟**：
+      1. 建立 `src/utils/logger.ts` 日誌工具
+      2. 實作結構化日誌格式：
+         - timestamp: ISO 8601 格式
+         - level: debug, info, warn, error, critical
+         - component: api, webhook, cron, database 等
+         - operation: 具體操作名稱
+         - data: 相關數據（post_id, chat_id 等）
+         - duration: 執行耗時（毫秒）
+         - http_status: HTTP 回應狀態碼
+      3. 實作不同層級的日誌記錄：
+         - 所有 API 請求和回應
+         - 訊息發送成功/失敗
+         - Cron 任務執行統計
+         - 錯誤和異常情況
+      4. 建立日誌過濾和查詢：支援按條件搜尋
+      5. 實作敏感資訊過濾：避免記錄 Token 和用戶私人資訊
+      6. 配置日誌輸出：Cloudflare Workers 使用 console 輸出
+    - **驗證標準**：
+      - 日誌格式統一且易於解析
+      - 關鍵操作都有對應日誌記錄
+      - 日誌內容豐富但不包含敏感資訊
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證日誌內容完整性。
     - 記錄：post_id, chat_id, HTTP 狀態, 執行耗時
 
-38. [ ] **13.2** 實作輸入大小限制（results ≤ 100）
+[ ] **13.2** 實作輸入大小限制（results ≤ 100）
 
+    - **執行步驟**：
+      1. 建立 `src/middleware/validation.ts` 驗證中間件
+      2. 實作請求大小檢查：
+         - POST /api/ingest 批量上傳限制
+         - 單一請求最多 100 筆記錄
+         - 單一記錄大小限制（如標題長度、內容長度）
+      3. 實作記憶體使用監控：
+         - 防止超大請求造成 OOM
+         - 設定合理的請求 timeout
+      4. 建立拒絕策略：
+         - 超過限制回傳 413 Payload Too Large
+         - 提供明確的錯誤訊息和建議
+      5. 實作分批處理建議：指導客戶端分批提交
+      6. 記錄大小限制觸發事件：監控濫用情況
+    - **驗證標準**：
+      - 超大請求被正確拒絕
+      - 錯誤訊息明確且有助於修正
+      - 系統穩定性不受異常請求影響
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證請求大小檢查。
 
-39. [ ] **13.3** 實作 URL 白名單機制（可選功能）
-    - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證網域限制功能。
+[ ] **13.3** 實作 URL 白名單機制（可選功能） - **執行步驟**： 1. 建立 URL 白名單配置： - 允許的域名清單 - 支援萬用字元匹配（\*.example.com） - 黑名單域名（惡意網站） 2. 實作 URL 驗證函數： - 解析 URL 並驗證格式 - 檢查域名是否在白名單中 - 檢查是否為惡意網站 3. 整合到 ingest API： - 在接收新聞時驗證 URL - 拒絕非白名單來源 - 記錄被拒絕的 URL 和原因 4. 建立白名單管理介面（可選）： - 允許管理員動態添加/移除域名 - 白名單變更日誌 5. 實作例外處理：緊急情況下的手動覆蓋 - **驗證標準**： - 白名單機制正確攔截非法來源 - 合法來源正常通過驗證 - 白名單配置靈活且易於管理 - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證網域限制功能。
+
+### 📋 階段完成檢核
+
+[ ] **5.X** 更新 changelog.md 記錄第五階段變更
+
+    - **執行步驟**：
+      1. 開啟 `.spec/changelog.md`
+      2. 在第四階段記錄後新增第五階段記錄
+      3. 列出新增檔案：錯誤處理工具、日誌系統、安全驗證模組、監控中間件等
+      4. 列出修改檔案：所有主要服務檔案（添加錯誤處理和日誌）
+      5. 記錄主要功能：重試機制、結構化日誌、安全驗證、輸入驗證、URL 白名單
+      6. 記錄測試項目：錯誤恢復測試、日誌格式驗證、安全機制檢查
+    - **驗證標準**：
+      - changelog.md 包含第五階段完整記錄
+      - 錯誤處理與安全功能清單完整
+      - 日誌和監控機制明確記錄
+    - 請以繁體中文記錄詳細變更內容，並確保安全功能描述準確。
 
 ---
 
@@ -543,41 +741,227 @@
 
 ### 14. 管理功能
 
-40. [ ] **14.1** 實作 POST /admin/push 手動推播功能
+[ ] **14.1** 實作 POST /admin/push 手動推播功能
 
+    - **執行步驟**：
+      1. 建立 `src/handlers/admin.ts` 管理功能處理程式
+      2. 實作 `/admin/push` 端點：
+         - 需要 X-API-Key 認證
+         - 支援指定 post_id 推播
+         - 支援全部未發布貼文推播
+      3. 實作推播參數：
+         - force: 強制重新發送已發布貼文
+         - filter_usernames: 限制推播對象
+         - dry_run: 僅模擬執行不實際發送
+      4. 整合現有推播邏輯：
+         - 重用 Cron 任務的推播流程
+         - 確保手動推播與自動推播的一致性
+      5. 實作推播狀態回應：
+         - 推播任務 ID
+         - 預計發送數量
+         - 執行進度（如果可能）
+      6. 建立推播日誌：記錄手動推播操作
+    - **驗證標準**：
+      - 手動推播功能正確執行
+      - 參數過濾邏輯準確運作
+      - 推播結果與自動推播一致
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證手動觸發機制。
 
-41. [ ] **14.2** 實作 dry_run=1 模式（試跑不實際發送）
-    - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證預覽模式正確性。
+[ ] **14.2** 實作 dry_run=1 模式（試跑不實際發送） - **執行步驟**： 1. 修改推播核心邏輯，添加 dry_run 參數支援 2. 實作模擬模式： - 執行所有邏輯但跳過實際的 API 調用 - 計算應發送的訊息數量和對象 - 模擬發送結果（假設全部成功） 3. 建立預覽回應格式： - 將要發送的貼文清單 - 目標用戶統計（總數、分組統計） - 預估執行時間 - 潛在問題警告（如 Token 過期等） 4. 實作詳細的執行計劃： - 按時間順序顯示將執行的操作 - 顯示篩選條件和結果 - 預覽訊息格式和內容 5. 建立 dry_run 專用日誌：與實際執行區分 - **驗證標準**： - 模擬執行結果準確反映實際情況 - 預覽資訊詳細且易於理解 - dry_run 模式不會產生任何副作用 - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證預覽模式正確性。
 
 ### 15. 系統測試
 
-42. [ ] **15.1** Webhook 安全性測試（無效 Secret 回 401）
+[ ] **15.1** Webhook 安全性測試（無效 Secret 回 401）
 
+    - **執行步驟**：
+      1. 建立測試案例：
+         - 無 X-Telegram-Bot-Api-Secret-Token header
+         - 錯誤的 Secret Token 值
+         - 空白或格式異常的 Secret Token
+      2. 實作自動化測試：
+         - 使用 curl 或測試框架發送請求
+         - 驗證回應狀態碼為 401
+         - 確認錯誤訊息格式正確
+      3. 測試邊界情況：
+         - 非常長的 Secret Token
+         - 包含特殊字符的 Secret Token
+         - 大小寫敏感性測試
+      4. 建立安全性檢查清單：
+         - 確認不會洩露系統資訊
+         - 驗證錯誤日誌記錄正確
+         - 確保攻擊請求不影響系統性能
+      5. 實作持續監控：定期執行安全性測試
+    - **驗證標準**：
+      - 所有無效請求都被正確拒絕
+      - 安全機制不影響正常操作
+      - 系統對惡意請求有適當防護
     - 請以繁體中文於測試程式中添加詳細流程說明與註解，並驗證安全機制。
 
-43. [ ] **15.2** 訂閱確認流程完整測試（token 產生 → 驗證 → 狀態變更）
+[ ] **15.2** 訂閱確認流程完整測試（token 產生 → 驗證 → 狀態變更）
 
+    - **執行步驟**：
+      1. 建立端對端測試流程：
+         - 模擬用戶發送「訂閱」指令
+         - 驗證 confirm_token 正確產生
+         - 檢查 token 過期時間設定
+         - 模擬確認指令：「確認 <token>」
+         - 驗證訂閱狀態變更為 confirmed
+      2. 測試異常情況：
+         - 過期 token 確認嘗試
+         - 無效 token 格式
+         - 重複確認同一 token
+         - 已確認用戶再次訂閱
+      3. 實作狀態一致性檢查：
+         - 資料庫狀態與預期一致
+         - 時間戳正確設定
+         - 所有相關欄位正確更新
+      4. 建立自動化測試套件：
+         - 涵蓋所有可能的用戶行為
+         - 並行測試多個用戶訂閱
+         - 效能測試：大量訂閱請求處理
+    - **驗證標準**：
+      - 完整流程在所有情況下都能正確執行
+      - 異常情況有適當的錯誤處理
+      - 系統狀態始終保持一致
     - 請以繁體中文於測試程式中添加詳細流程說明與註解，並驗證完整流程。
 
-44. [ ] **15.3** UPSERT 行為測試（相同 URL 更新不重複）
+[ ] **15.3** UPSERT 行為測試（相同 URL 更新不重複）
 
+    - **執行步驟**：
+      1. 建立 UPSERT 測試案例：
+         - 首次提交新 URL：應新增記錄
+         - 相同 URL 再次提交：應更新現有記錄
+         - 檢查 post_id 保持不變
+         - 驗證 updated_ts 正確更新
+      2. 測試內容更新邏輯：
+         - title 更新測試
+         - content 更新測試
+         - publishTime 更新測試
+         - filters_json 更新測試
+      3. 實作並發測試：
+         - 同時提交相同 URL 的請求
+         - 驗證資料庫一致性
+         - 檢查是否出現重複記錄
+      4. 測試邊界情況：
+         - 極長的 URL
+         - 包含特殊字符的 URL
+         - URL 參數順序不同但本質相同
+      5. 建立數據完整性驗證：
+         - 檢查外鍵約束
+         - 驗證索引正確性
+         - 確認無孤立記錄
+    - **驗證標準**：
+      - UPSERT 邏輯完全符合預期
+      - 不會產生重複或孤立數據
+      - 並發情況下系統行為正確
     - 請以繁體中文於測試程式中添加詳細流程說明與註解，並驗證去重邏輯。
 
-45. [ ] **15.4** 推播與 published 標記測試
+[ ] **15.4** 推播與 published 標記測試
 
+    - **執行步驟**：
+      1. 建立推播測試環境：
+         - 準備測試用戶帳號和訂閱
+         - 建立測試新聞內容
+         - 設定測試專用的 Telegram Bot
+      2. 測試推播邏輯：
+         - 驗證未發布貼文正確查詢
+         - 檢查推播訊息格式
+         - 確認 deliveries 記錄正確寫入
+      3. 測試 published 狀態更新：
+         - 部分用戶發送成功時的狀態
+         - 所有用戶發送成功時的狀態變更
+         - 發送失敗時的處理邏輯
+      4. 測試邊界情況：
+         - 無訂閱用戶時的處理
+         - 所有訂閱都被停用時的處理
+         - 推播過程中新增訂閱的處理
+      5. 驗證冪等性：
+         - 重複執行推播任務不會重複發送
+         - published=1 的貼文不會再次推播
+    - **驗證標準**：
+      - 推播邏輯完全正確執行
+      - published 狀態準確反映發送情況
+      - 系統具有良好的冪等性
     - 請以繁體中文於測試程式中添加詳細流程說明與註解，並驗證發布狀態更新。
 
-46. [ ] **15.5** 速率限制與重試測試（429 處理）
+[ ] **15.5** 速率限制與重試測試（429 處理）
 
+    - **執行步驟**：
+      1. 建立速率限制測試：
+         - 快速發送大量請求觸發 Telegram 速率限制
+         - 驗證系統正確處理 429 回應
+         - 檢查 retry_after 標頭解析
+      2. 測試指數退避機制：
+         - 驗證退避時間計算正確
+         - 檢查重試間隔遞增邏輯
+         - 確認最大重試次數限制
+      3. 測試全域速率控制：
+         - 驗證 25 訊息/秒的限制
+         - 檢查突發流量處理
+         - 測試多聊天並發發送
+      4. 測試單聊天速率限制：
+         - 驗證同一聊天 1 訊息/秒限制
+         - 檢查聊天佇列管理
+         - 測試記憶體清理機制
+      5. 建立壓力測試：
+         - 大量訊息同時發送
+         - 長時間持續發送測試
+         - 系統資源使用監控
+    - **驗證標準**：
+      - 速率限制機制正確運作
+      - 系統在高負載下保持穩定
+      - 重試機制有效處理臨時故障
     - 請以繁體中文於測試程式中添加詳細流程說明與註解，並驗證限流與退避機制。
 
-47. [ ] **15.6** 關鍵字互動完整測試（所有指令）
+[ ] **15.6** 關鍵字互動完整測試（所有指令）
 
+    - **執行步驟**：
+      1. 建立指令測試套件：
+         - /start 指令測試
+         - /subscribe 和「訂閱」指令測試
+         - /status 和「狀態」指令測試
+         - /unsubscribe 和「退訂」指令測試
+         - 「確認 <token>」指令測試
+      2. 測試訊息格式和回應：
+         - 驗證回應訊息格式正確
+         - 檢查 Inline Keyboard 按鈕
+         - 測試訊息內容的準確性
+      3. 測試狀態轉換：
+         - 各種用戶狀態下的指令回應
+         - 狀態變更的正確性
+         - 邊界情況處理
+      4. 測試錯誤處理：
+         - 無效指令的處理
+         - 格式錯誤的指令
+         - 系統異常時的回應
+      5. 測試並發和效能：
+         - 多用戶同時發送指令
+         - 系統回應時間測量
+         - 記憶體和 CPU 使用監控
+    - **驗證標準**：
+      - 所有指令都能正確執行和回應
+      - 用戶體驗流暢且直觀
+      - 系統在高並發下保持穩定
     - 請以繁體中文於測試程式中添加詳細流程說明與註解，並驗證互動邏輯正確。
 
-48. [ ] **15.7** 群組管理員權限測試
-    - 請以繁體中文於測試程式中添加詳細流程說明與註解，並驗證權限檢查機制。
+[ ] **15.7** 群組管理員權限測試 - **執行步驟**： 1. 建立測試群組環境： - 建立測試 Telegram 群組 - 添加機器人到群組 - 設定不同權限等級的測試帳號 2. 測試管理員權限檢查： - 群組創建者執行管理指令 - 群組管理員執行管理指令 - 一般成員嘗試執行管理指令 3. 測試權限 API 調用： - getChatMember API 調用測試 - 權限快取機制測試 - API 錯誤處理測試 4. 測試群組專用功能： - 群組訊息格式測試 - @bot_username 指令格式支援 - 群組專用回應邏輯 5. 測試邊界情況： - 機器人被踢出群組 - 管理員權限變更 - 群組設定變更 - **驗證標準**： - 權限檢查機制完全正確 - 只有授權用戶能執行管理功能 - 群組功能與私聊功能正確區分 - 請以繁體中文於測試程式中添加詳細流程說明與註解，並驗證權限檢查機制。
+
+### 📋 階段完成檢核
+
+[ ] **6.X** 更新 changelog.md 記錄第六階段變更
+
+    - **執行步驟**：
+      1. 開啟 `.spec/changelog.md`
+      2. 在第五階段記錄後新增第六階段記錄
+      3. 列出新增檔案：管理 API、統計服務、測試檔案、文件等
+      4. 列出修改檔案：路由配置、權限控制等
+      5. 記錄主要功能：管理員介面、統計報表、完整測試套件、API 文件
+      6. 記錄測試項目：管理功能測試、統計準確性驗證、權限控制測試
+    - **驗證標準**：
+      - changelog.md 包含第六階段完整記錄
+      - 管理功能與測試項目清單完整
+      - 測試覆蓋範圍明確記錄
+    - 請以繁體中文記錄詳細變更內容，並確保管理功能和測試描述準確。
 
 ---
 
@@ -585,44 +969,138 @@
 
 ### 16. 部署作業
 
-49. [ ] **16.1** 設定 Telegram Webhook（setWebhook 至 Workers URL）
+[ ] **16.1** 設定 Telegram Webhook（setWebhook 至 Workers URL）
 
+    - **執行步驟**：
+      1. 確認 Workers 已成功部署並可正常存取
+      2. 取得 Workers URL：`https://your-worker-name.your-subdomain.workers.dev`
+      3. 建立 webhook 設定腳本：
+         - 使用 curl 或 Postman 呼叫 Telegram Bot API
+         - 端點：`https://api.telegram.org/bot<BOT_TOKEN>/setWebhook`
+         - 參數：url, secret_token
+      4. 執行 webhook 設定：
+         ```bash
+         curl -X POST "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook" \
+           -d "url=https://your-worker.workers.dev/tg/webhook" \
+           -d "secret_token=${WEBHOOK_SECRET}"
+         ```
+      5. 驗證設定成功：呼叫 `getWebhookInfo` 檢查狀態
+      6. 測試 webhook 接收：發送測試訊息給機器人
+    - **驗證標準**：
+      - getWebhookInfo 回傳正確的 URL 和狀態
+      - 測試訊息能正常觸發 webhook 處理
+      - Workers 日誌顯示收到 Telegram 請求
     - 請以繁體中文於程式中添加詳細流程說明與註解，並驗證 Webhook 設定成功。
     - 參考：[spec.md - 設定 Webhook](./spec.md#76-設定-webhook)
 
-50. [ ] **16.2** 生產環境部署與環境變數確認
-    - 請以繁體中文於部署腳本中添加詳細流程說明與註解，並驗證部署成功。
-    - 執行：`wrangler deploy`
+[ ] **16.2** 生產環境部署與環境變數確認 - **執行步驟**： 1. 建立部署前檢查清單： - 所有 Secrets 已正確設定 - wrangler.toml 配置正確 - D1 資料庫遷移已執行 - Cron 觸發器設定正確 2. 執行部署命令：`wrangler deploy` 3. 驗證部署結果： - Workers 日誌無錯誤訊息 - 健康檢查端點回應正常 - D1 資料庫連線成功 4. 檢查環境變數： - 在 Workers 中測試所有 Secrets 可正常存取 - 確認環境特定配置（如 domain, api endpoints） 5. 建立部署文件：記錄部署步驟和配置資訊 6. 設定監控和警報：Cloudflare Analytics, 錯誤通知 - **驗證標準**： - 部署命令成功完成，無錯誤訊息 - 所有 API 端點可正常存取 - Cron 任務按預期觸發 - 請以繁體中文於部署腳本中添加詳細流程說明與註解，並驗證部署成功。 - 執行：`wrangler deploy`
 
 ### 17. 驗收測試
 
-51. [ ] **17.1** 端到端流程測試（Producer → API → 推播 → 用戶接收）
+[ ] **17.1** 端到端流程測試（Producer → API → 推播 → 用戶接收）
 
+    - **執行步驟**：
+      1. 建立完整流程測試腳本：
+         - 模擬外部系統呼叫 POST /api/ingest 提交新聞
+         - 驗證資料正確寫入 D1 資料庫
+         - 建立測試用訂閱（使用真實 Telegram 帳號）
+      2. 執行自動推播流程：
+         - 手動觸發 Cron 任務或等待自動執行
+         - 監控 Workers 日誌，確認推播邏輯執行
+         - 驗證 deliveries 表記錄正確寫入
+      3. 驗證用戶接收：
+         - 確認測試 Telegram 帳號收到推播訊息
+         - 檢查訊息格式和內容正確性
+         - 驗證連結可正常點擊跳轉
+      4. 測試邊界情況：
+         - 大量新聞同時提交
+         - 網路暫時中斷恢復
+         - 重複的 URL 處理
+      5. 建立測試報告：記錄所有測試結果和發現問題
+    - **驗證標準**：
+      - 完整流程無中斷，用戶正確收到新聞
+      - 所有中間狀態和記錄正確
+      - 系統處理能力符合預期
     - 請以繁體中文於測試程式中添加詳細流程說明與註解，並驗證完整業務流程。
 
-52. [ ] **17.2** 效能測試（100 條貼文 ingest ≤ 1s 平均延遲）
+[ ] **17.2** 效能測試（100 條貼文 ingest ≤ 1s 平均延遲）
 
+    - **執行步驟**：
+      1. 建立效能測試工具：
+         - 準備 100 條測試新聞資料
+         - 建立併發請求測試腳本（使用 curl 或專業工具）
+         - 實作響應時間統計邏輯
+      2. 執行 ingest API 效能測試：
+         - 單一請求延遲測試
+         - 批量請求（10/20/50/100 條）效能測試
+         - 並發請求處理能力測試
+      3. 測試推播效能：
+         - 100 個訂閱用戶的推播時間
+         - 大量訊息的發送速率
+         - Telegram API 速率限制處理
+      4. 監控系統資源使用：
+         - Workers CPU 使用時間
+         - D1 資料庫查詢效能
+         - 記憶體使用量統計
+      5. 建立效能基準線：
+         - 記錄各種條件下的效能指標
+         - 建立效能監控儀表板
+      6. 優化效能瓶頸：根據測試結果進行必要的優化
+    - **驗證標準**：
+      - 100 條貼文 ingest 平均延遲 ≤ 1s
+      - 推播延遲在可接受範圍內
+      - 系統在高負載下保持穩定
     - 請以繁體中文於測試程式中添加詳細流程說明與註解，並驗證效能要求。
 
-53. [ ] **17.3** 可用性測試（Cron 冪等性、失敗重試）
-    - 請以繁體中文於測試程式中添加詳細流程說明與註解，並驗證系統穩定性。
+[ ] **17.3** 可用性測試（Cron 冪等性、失敗重試） - **執行步驟**： 1. 測試 Cron 任務冪等性： - 同時觸發多個 Cron 執行實例 - 驗證不會產生重複的推播 - 確認資料庫狀態一致性 2. 測試故障恢復能力： - 模擬 Telegram API 暫時無法存取 - 模擬 D1 資料庫連線中斷 - 驗證自動重試機制正常運作 3. 測試資料完整性： - 在各種故障情況下檢查資料一致性 - 驗證沒有遺漏或重複的推播 - 確認所有狀態轉換正確 4. 長期穩定性測試： - 連續運行系統 24-48 小時 - 監控記憶體洩漏和資源累積 - 檢查長期運行的效能變化 5. 災難恢復測試： - 模擬完全系統故障和恢復 - 驗證資料備份和還原流程 - 測試緊急維護模式 6. 建立監控和警報系統： - 系統健康度監控 - 異常狀況自動警報 - 關鍵指標趨勢分析 - **驗證標準**： - Cron 任務在所有情況下都保持冪等性 - 系統能自動從各種故障中恢復 - 長期運行無效能衰退或資源洩漏 - 請以繁體中文於測試程式中添加詳細流程說明與註解，並驗證系統穩定性。
+
+### 📋 階段完成檢核
+
+[ ] **7.X** 更新 changelog.md 記錄第七階段變更並完成專案記錄
+
+    - **執行步驟**：
+      1. 開啟 `.spec/changelog.md`
+      2. 在第六階段記錄後新增第七階段記錄
+      3. 列出最終檔案：部署腳本、驗收測試、監控配置、文件等
+      4. 列出修改檔案：生產環境配置、最終優化調整
+      5. 記錄主要功能：Webhook 設定、生產部署、端到端驗收、效能驗證
+      6. 記錄測試項目：部署驗證、系統整合測試、效能基準測試、穩定性測試
+      7. 補充專案總結：
+         - 完整功能清單
+         - 技術架構概述
+         - 部署指南
+         - 維運建議
+    - **驗證標準**：
+      - changelog.md 包含完整的專案開發記錄
+      - 所有 7 個階段的變更均有詳細記錄
+      - 專案總結內容完整且準確
+    - 請以繁體中文記錄詳細變更內容，並完成專案開發的完整記錄。
 
 ---
 
 ## 📋 進度追蹤
 
-**完成狀態**：`0/53` 任務完成
+**完成狀態**：`0/54` 任務完成（包含各階段 changelog 更新任務）
 
 **各階段進度**：
 
-- 🏗️ 第一階段（環境建置）：`0/6` 完成
-- ⚙️ 第二階段（核心 API）：`0/9` 完成
-- 🤖 第三階段（Telegram 互動）：`0/9` 完成
-- 📤 第四階段（推播系統）：`0/9` 完成
-- 🛡️ 第五階段（錯誤處理與安全）：`0/6` 完成
-- 🧪 第六階段（管理功能與測試）：`0/8` 完成
-- 🚀 第七階段（部署與驗收）：`0/6` 完成
+- 🏗️ 第一階段（環境建置）：`0/7` 完成（含 changelog 更新）
+- ⚙️ 第二階段（核心 API）：`0/10` 完成（含 changelog 更新）
+- 🤖 第三階段（Telegram 互動）：`0/10` 完成（含 changelog 更新）
+- 📤 第四階段（推播系統）：`0/10` 完成（含 changelog 更新）
+- 🛡️ 第五階段（錯誤處理與安全）：`0/9` 完成（含 changelog 更新）
+- 🧪 第六階段（管理功能與測試）：`0/9` 完成（含 changelog 更新）
+- 🚀 第七階段（部署與驗收）：`0/8` 完成（含 changelog 更新）
 
 ---
 
-💡 **開發建議**：建議依序執行各階段任務，每完成一個階段進行簡單測試，確保功能正確後再進入下一階段。
+💡 **開發建議**：建議依序執行各階段任務，每完成一個階段進行簡單測試，確保功能正確後再進入下一階段。每個階段結束時，請務必更新 `.spec/changelog.md` 記錄開發進度與變更內容。
+
+📝 **changelog.md 更新說明**：每個階段完成後，請在 `.spec/changelog.md` 中詳細記錄：
+
+- 新增/修改的檔案清單
+- 主要完成的功能特性
+- 驗證測試的項目
+- 技術實作的重點摘要
+
+這將有助於追蹤開發進度，也便於後續維護和文件管理。

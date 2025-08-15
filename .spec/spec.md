@@ -106,24 +106,56 @@ CREATE TABLE IF NOT EXISTS deliveries (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   post_id INTEGER NOT NULL,
   subscription_id INTEGER NOT NULL,
-  status TEXT NOT NULL,           -- 'sent' | 'failed'
+  status TEXT NOT NULL,           -- 'sent' | 'failed' | 'pending'
   telegram_message_id TEXT,
-  error TEXT,
+  error_msg TEXT,                 -- 詳細錯誤訊息
+  retry_count INTEGER NOT NULL DEFAULT 0,
+  last_retry_ts INTEGER,          -- 上次重試時間戳
   sent_at_ts INTEGER,
   created_at_ts INTEGER NOT NULL,
+  updated_at_ts INTEGER NOT NULL,
   FOREIGN KEY (post_id) REFERENCES posts(id),
   FOREIGN KEY (subscription_id) REFERENCES subscriptions(id),
   UNIQUE(post_id, subscription_id)
 );
 
+-- 訂閱者表需要增加取消相關欄位
+ALTER TABLE subscriptions ADD COLUMN cancelled_ts INTEGER; -- 取消訂閱時間
+ALTER TABLE subscriptions ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'; -- 'pending' | 'confirmed' | 'cancelled'
+
 CREATE INDEX IF NOT EXISTS idx_posts_published ON posts(published, post_date_ts);
 CREATE INDEX IF NOT EXISTS idx_deliveries_post ON deliveries(post_id);
+CREATE INDEX IF NOT EXISTS idx_deliveries_status ON deliveries(status);
+CREATE INDEX IF NOT EXISTS idx_deliveries_retry ON deliveries(retry_count);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_enabled ON subscriptions(enabled);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_confirmed ON subscriptions(confirmed);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_confirm_token ON subscriptions(confirm_token);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);
 ```
 
-### 5.2 發布完成的判定
+### 5.2 資料庫遷移管理
+
+#### 遷移檔案結構
+
+```
+migrations/
+├── 0001_init.sql           -- 初始資料表建立
+├── 0002_add_error_fields.sql -- 錯誤記錄欄位擴充
+├── 0003_add_status_fields.sql -- 狀態管理欄位
+└── ...
+```
+
+#### 遷移執行
+
+```bash
+# 本地開發
+wrangler d1 migrations apply telegram_news_db --local
+
+# 生產環境
+wrangler d1 migrations apply telegram_news_db
+```
+
+### 5.3 發布完成的判定
 
 - 一篇貼文需對「當下所有 `enabled=1` 的訂閱」皆 `sent` 才將 `posts.published=1` 與 `published_at_ts=now()`。
 
@@ -395,7 +427,119 @@ export default {
 };
 ```
 
-## 15) 參考文件
+## 15) 結構化日誌規範
+
+### 15.1 日誌格式
+
+所有系統日誌應採用以下 JSON 格式：
+
+```json
+{
+	"timestamp": "2025-08-14T10:30:00.000Z",
+	"level": "info",
+	"component": "api",
+	"operation": "ingest_post",
+	"data": {
+		"post_id": 123,
+		"chat_id": "456789",
+		"url": "https://example.com/news/1",
+		"username": "newsbot"
+	},
+	"duration": 150,
+	"http_status": 200,
+	"error": null
+}
+```
+
+### 15.2 日誌層級
+
+- **debug**：開發除錯資訊
+- **info**：一般操作記錄
+- **warn**：警告但不影響功能
+- **error**：錯誤需要關注
+- **critical**：嚴重錯誤需要立即處理
+
+### 15.3 組件分類
+
+- **api**：API 端點操作
+- **webhook**：Telegram webhook 處理
+- **cron**：排程任務執行
+- **database**：資料庫操作
+- **telegram**：Telegram API 呼叫
+
+## 16) 測試與驗收標準
+
+### 16.1 單元測試標準
+
+- **API 端點測試**：所有端點需要測試正常與異常情況
+- **資料處理測試**：UPSERT 邏輯、時區轉換、資料驗證
+- **業務邏輯測試**：訂閱確認、推播邏輯、錯誤處理
+
+### 16.2 整合測試標準
+
+- **端對端流程測試**：從 ingest → 推播 → 用戶接收的完整流程
+- **Telegram 整合測試**：webhook 處理、訊息發送、用戶互動
+- **資料庫整合測試**：遷移、索引、約束驗證
+
+### 16.3 效能標準
+
+- **API 回應時間**：100 條貼文 ingest ≤ 1s 平均延遲
+- **推播效能**：符合 Telegram API 速率限制（~25 訊息/秒）
+- **資料庫查詢**：核心查詢 ≤ 100ms
+
+### 16.4 可用性標準
+
+- **Cron 冪等性**：重複執行不會產生副作用
+- **錯誤恢復**：自動重試機制，最多 3 次指數退避
+- **資料一致性**：所有狀態轉換保持 ACID 特性
+
+## 17) 部署配置範本
+
+### 17.1 完整 wrangler.toml
+
+```toml
+name = "telegram-news"
+main = "src/index.ts"
+compatibility_date = "2025-08-14"
+node_compat = true
+
+# Cron 觸發器：每小時整點執行
+[triggers]
+crons = ["0 * * * *"]
+
+# D1 資料庫綁定
+[[d1_databases]]
+binding = "DB"
+database_name = "telegram_news_db"
+database_id = "your-database-id-here"
+migrations_dir = "migrations"
+
+# 環境變數（使用 wrangler secret put 設定）
+[vars]
+# 以下變數透過 wrangler secret put 設定：
+# TELEGRAM_BOT_TOKEN
+# API_KEY
+# TELEGRAM_WEBHOOK_SECRET
+```
+
+### 17.2 環境變數設定流程
+
+```bash
+# 設定 Secrets
+wrangler secret put TELEGRAM_BOT_TOKEN
+wrangler secret put API_KEY
+wrangler secret put TELEGRAM_WEBHOOK_SECRET
+
+# 部署
+wrangler deploy
+
+# 設定 Telegram Webhook
+curl -X POST "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook" \
+  -d "url=https://your-worker.workers.dev/tg/webhook" \
+  -d "secret_token=${WEBHOOK_SECRET}"
+```
+
+## 18) 參考文件
 
 - Telegram setWebhook 與 Webhook Secret： https://core.telegram.org/bots/webhooks
 - Telegram CallbackQuery / InlineKeyboard： https://core.telegram.org/bots/api#inlinekeyboardmarkup
