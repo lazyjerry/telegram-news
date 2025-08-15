@@ -14,6 +14,7 @@ import {
 	handleConfirmSubscription,
 } from './handlers/subscriptions';
 import { handleTelegramWebhook, getWebhookStatus } from './handlers/telegram';
+import { handleAdminPush } from './handlers/adminPush';
 
 // 建立 Hono 應用實例，並設定環境型別
 const app = new Hono<{ Bindings: Env }>();
@@ -140,12 +141,7 @@ telegramRoutes.get('/webhook', getWebhookStatus);
 // 管理員路由群組
 const adminRoutes = new Hono<{ Bindings: Env }>();
 
-adminRoutes.post('/push', async (c) => {
-	return c.json({
-		ok: true,
-		message: '手動推播 - 開發中',
-	});
-});
+adminRoutes.post('/push', handleAdminPush);
 
 // 註冊路由群組
 app.route('/api', apiRoutes);
