@@ -6,6 +6,12 @@
 
 ### 📱 畫面截圖
 
+以下為本系統主要功能操作畫面截圖：
+
+![機器人啟動與歡迎畫面](imgs/sc01.png)
+![訂閱新聞推播操作](imgs/sc02.png)
+![API 測試與推播結果](imgs/sc03.png)
+
 ### 📱 私人聊天功能
 
 #### 基本指令
@@ -953,23 +959,6 @@ Help 指令的技術特點：
 ---
 
 ---
-
-## 🖼️ 系統截圖展示
-
-以下為本系統主要功能操作畫面截圖：
-
-<div align="center">
-
-<img src="imgs/sc01.png" alt="機器人啟動與歡迎畫面" width="400" />
-<br><sub>機器人啟動與歡迎訊息</sub>
-
-<img src="imgs/sc02.png" alt="訂閱新聞推播操作" width="400" />
-<br><sub>訂閱新聞推播操作流程</sub>
-
-<img src="imgs/sc03.png" alt="API 測試與推播結果" width="400" />
-<br><sub>API 測試與推播結果展示</sub>
-
-</div>
 
 ---
 
