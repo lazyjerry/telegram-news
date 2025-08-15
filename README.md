@@ -16,20 +16,9 @@
 
 以下為本系統主要功能操作畫面截圖：
 
-<div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
-  <div style="flex: 1; min-width: 30%; margin: 5px;">
-    <img src="imgs/sc01.png" alt="機器人啟動與歡迎畫面" style="width: 100%;">
-    <p align="center">機器人啟動與歡迎畫面</p>
-  </div>
-  <div style="flex: 1; min-width: 30%; margin: 5px;">
-    <img src="imgs/sc02.png" alt="訂閱新聞推播操作" style="width: 100%;">
-    <p align="center">訂閱新聞推播操作</p>
-  </div>
-  <div style="flex: 1; min-width: 30%; margin: 5px;">
-    <img src="imgs/sc03.png" alt="API 測試與推播結果" style="width: 100%;">
-    <p align="center">API 測試與推播結果</p>
-  </div>
-</div>
+|          機器人啟動與歡迎畫面          |          訂閱新聞推播操作          |          API 測試與推播結果          |
+| :------------------------------------: | :--------------------------------: | :----------------------------------: |
+| ![機器人啟動與歡迎畫面](imgs/sc01.png) | ![訂閱新聞推播操作](imgs/sc02.png) | ![API 測試與推播結果](imgs/sc03.png) |
 
 ### 📱 私人聊天功能
 
