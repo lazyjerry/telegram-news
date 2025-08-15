@@ -6,6 +6,19 @@
 import type { Env, Post, Delivery } from '../types';
 
 /**
+ * Telegram 內建鍵盤按鈕介面
+ */
+export interface InlineKeyboardButton {
+	text: string;
+	callback_data?: string;
+	url?: string;
+}
+
+export interface InlineKeyboardMarkup {
+	inline_keyboard: InlineKeyboardButton[][];
+}
+
+/**
  * Telegram API 錯誤類型
  */
 export interface TelegramError {
@@ -73,12 +86,66 @@ export class TelegramApiService {
 	}
 
 	/**
+	 * 發送互動訊息（支援內建鍵盤）
+	 * @param chatId 聊天 ID
+	 * @param text 訊息文本
+	 * @param keyboard 可選的內建鍵盤
+	 * @returns Promise<TelegramResponse> API 回應
+	 */
+	async sendInteractiveMessage(chatId: string | number, text: string, keyboard?: InlineKeyboardMarkup): Promise<TelegramResponse> {
+		try {
+			const url = `${this.baseUrl}/sendMessage`;
+			const payload: any = {
+				chat_id: chatId,
+				text: text,
+				parse_mode: 'HTML',
+				disable_web_page_preview: false,
+				disable_notification: false,
+			};
+
+			// 如果有提供鍵盤，添加到 payload
+			if (keyboard) {
+				payload.reply_markup = keyboard;
+			}
+
+			console.log(`發送互動訊息到聊天 ${chatId}，鍵盤: ${keyboard ? '有' : '無'}`);
+
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(payload),
+			});
+
+			const result = (await response.json()) as TelegramResponse;
+
+			// 記錄 API 回應狀態
+			if (!result.ok) {
+				console.warn(`Telegram API 回應錯誤:`, result);
+
+				// 處理速率限制
+				if (result.error_code === 429) {
+					await this.handleRateLimit(result);
+				}
+			} else {
+				console.log(`互動訊息成功發送到聊天 ${chatId}`);
+			}
+
+			return result;
+		} catch (error) {
+			console.error('發送互動訊息時發生網路錯誤:', error);
+			throw error;
+		}
+	}
+
+	/**
 	 * 呼叫 Telegram sendMessage API
 	 * @param chatId 聊天 ID
 	 * @param text 訊息文本
 	 * @returns Promise<TelegramResponse> API 回應
 	 */
-	private async sendMessage(chatId: string, text: string): Promise<TelegramResponse> {
+	async sendMessage(chatId: string, text: string): Promise<TelegramResponse> {
 		try {
 			const url = `${this.baseUrl}/sendMessage`;
 			const payload = {

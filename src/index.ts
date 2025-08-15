@@ -13,6 +13,7 @@ import {
 	handleDeleteSubscription,
 	handleConfirmSubscription,
 } from './handlers/subscriptions';
+import { handleTelegramWebhook, getWebhookStatus } from './handlers/telegram';
 
 // 建立 Hono 應用實例，並設定環境型別
 const app = new Hono<{ Bindings: Env }>();
@@ -133,12 +134,8 @@ subscriptionRoutes.delete('/:chat_id', handleDeleteSubscription);
 // Telegram Webhook 路由群組
 const telegramRoutes = new Hono<{ Bindings: Env }>();
 
-telegramRoutes.post('/webhook', async (c) => {
-	return c.json({
-		ok: true,
-		message: 'Telegram Webhook - 開發中',
-	});
-});
+telegramRoutes.post('/webhook', handleTelegramWebhook);
+telegramRoutes.get('/webhook', getWebhookStatus);
 
 // 管理員路由群組
 const adminRoutes = new Hono<{ Bindings: Env }>();
