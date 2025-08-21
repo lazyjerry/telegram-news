@@ -169,3 +169,4 @@ dist
 curl-template.sh
 
 __pycache__/*
+.DS_Store
